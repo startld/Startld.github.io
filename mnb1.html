@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonBazaar — Earn Rewards with Surveys &amp; Offers</title>
+<style>
+  :root {
+    --bg: #0b0e1a;
+    --bg2: #111530;
+    --card: rgba(255,255,255,.05);
+    --card-border: rgba(255,255,255,.10);
+    --text: #eef1ff;
+    --muted: #9aa3c7;
+    --accent: #7c5cff;
+    --accent2: #00d4ff;
+    --gold: #ffd166;
+    --green: #34e08a;
+    --radius: 18px;
+    --shadow: 0 20px 60px rgba(0,0,0,.45);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: radial-gradient(1200px 700px at 80% -10%, #2a1a5e 0%, transparent 55%),
+                radial-gradient(900px 600px at 10% 10%, #0d2b4a 0%, transparent 50%),
+                var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Nav ---------- */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 6%;
+    background: rgba(11,14,26,.7);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 1.25rem; letter-spacing: .3px;
+  }
+  .logo .moon {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff6d8, #f4c95d 60%, #b98a2f);
+    box-shadow: 0 0 18px rgba(244,201,93,.55);
+    position: relative;
+  }
+  .logo .moon::after {
+    content: ""; position: absolute; inset: 6px 6px auto auto;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(139,94,32,.35);
+  }
+  nav .links { display: flex; gap: 28px; font-size: .95rem; }
+  nav .links a { color: var(--muted); text-decoration: none; transition: .2s; }
+  nav .links a:hover { color: var(--text); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border-radius: 999px;
+    font-weight: 700; font-size: .95rem; cursor: pointer;
+    text-decoration: none; border: none; transition: .25s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; box-shadow: 0 8px 24px rgba(124,92,255,.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(124,92,255,.55); }
+  .btn-ghost { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--card-border); }
+  .btn-ghost:hover { background: rgba(255,255,255,.12); }
+  .btn-gold {
+    background: linear-gradient(135deg, #ffd166, #ff9f43);
+    color: #3a2500; box-shadow: 0 8px 24px rgba(255,159,67,.35);
+  }
+  .btn-gold:hover { transform: translateY(-2px); }
+
+  /* ---------- Hero ---------- */
+  header {
+    min-height: 100vh; display: flex; align-items: center;
+    padding: 120px 6% 80px; position: relative;
+  }
+  .hero-grid {
+    display: grid; grid-template-columns: 1.1fr .9fr; gap: 60px;
+    align-items: center; max-width: 1200px; margin: 0 auto; width: 100%;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(124,92,255,.15); color: #b9a8ff;
+    border: 1px solid rgba(124,92,255,.35);
+    padding: 6px 14px; border-radius: 999px; font-size: .85rem; font-weight: 600;
+    margin-bottom: 22px;
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+  h1 {
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 900; line-height: 1.15; letter-spacing: -.5px;
+    margin-bottom: 20px;
+  }
+  h1 .grad {
+    background: linear-gradient(90deg, var(--accent2), var(--accent), #ff9f43);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub {
+    color: var(--muted); font-size: 1.1rem; max-width: 520px; margin-bottom: 32px;
+  }
+  .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  .trust {
+    display: flex; gap: 28px; flex-wrap: wrap; color: var(--muted); font-size: .9rem;
+  }
+  .trust b { color: var(--text); display: block; font-size: 1.2rem; }
+
+  /* Hero visual */
+  .hero-card {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: var(--radius); padding: 26px;
+    backdrop-filter: blur(10px); box-shadow: var(--shadow);
+    transform: rotate(1.5deg); position: relative;
+  }
+  .hero-card::before {
+    content: ""; position: absolute; inset: -40px -40px auto auto; width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(124,92,255,.35), transparent 70%);
+    z-index: -1;
+  }
+  .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .row h3 { font-size: 1.05rem; }
+  .chip {
+    background: rgba(52,224,138,.15); color: var(--green);
+    border: 1px solid rgba(52,224,138,.3);
+    padding: 4px 12px; border-radius: 999px; font-size: .8rem; font-weight: 700;
+  }
+  .offer {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 10px;
+    transition: .2s;
+  }
+  .offer:hover { background: rgba(255,255,255,.08); transform: translateX(4px); }
+  .offer .ico {
+    width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 1.2rem;
+  }
+  .offer .meta { flex: 1; }
+  .offer .meta .t { font-weight: 700; font-size: .95rem; }
+  .offer .meta .s { font-size: .8rem; color: var(--muted); }
+  .offer .pts { color: var(--gold); font-weight: 800; font-size: .95rem; }
+  .progress { margin-top: 18px; }
+  .progress .top { display: flex; justify-content: space-between; font-size: .85rem; margin-bottom: 8px; color: var(--muted); }
+  .bar { height: 10px; background: rgba(255,255,255,.08); border-radius: 999px; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 68%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+  /* ---------- Sections ---------- */
+  section { padding: 90px 6%; max-width: 1200px; margin: 0 auto; }
+  .sec-head { text-align: center; margin-bottom: 56px; }
+  .sec-head h2 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); font-weight: 800; margin-bottom: 12px; }
+  .sec-head p { color: var(--muted); max-width: 560px; margin: 0 auto; }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .step {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: var(--radius); padding: 30px; position: relative;
+    transition: .25s;
+  }
+  .step:hover { transform: translateY(-6px); border-color: rgba(124,92,255,.45); }
+  .step .num {
+    width: 46px; height: 46px; border-radius: 14px; margin-bottom: 18px;
+    display: grid; place-items: center; font-weight: 900; font-size: 1.2rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+  }
+  .step h3 { margin-bottom: 10px; font-size: 1.15rem; }
+  .step p { color: var(--muted); font-size: .93rem; }
+
+  /* Why us */
+  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .why-card {
+    display: flex; gap: 18px; align-items: flex-start;
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: var(--radius); padding: 26px;
+  }
+  .why-card .ico {
+    width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 1.4rem;
+    background: rgba(124,92,255,.15); border: 1px solid rgba(124,92,255,.3);
+  }
+  .why-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+  .why-card p { color: var(--muted); font-size: .92rem; }
+  .why-card .tag {
+    display: inline-block; margin-top: 10px; font-size: .8rem; font-weight: 700;
+    color: var(--gold); background: rgba(255,209,102,.12);
+    padding: 3px 10px; border-radius: 999px;
+  }
+
+  /* Rewards */
+  .rewards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .reward {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: var(--radius); padding: 26px; text-align: center;
+    transition: .25s;
+  }
+  .reward:hover { transform: translateY(-6px); border-color: rgba(0,212,255,.45); }
+  .reward .ico { font-size: 2.2rem; margin-bottom: 12px; }
+  .reward h4 { margin-bottom: 6px; }
+  .reward p { color: var(--muted); font-size: .85rem; margin-bottom: 14px; }
+  .reward .pts { color: var(--gold); font-weight: 800; }
+
+  /* Live Feed */
+  .live-wrap {
+    background: var(--card); border: 1px solid var(--card-border);
+    border-radius: var(--radius); padding: 28px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .live-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .live-head h3 { font-size: 1.15rem; }
+  .live-head .status { display: flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 700; }
+  .live-on { color: var(--green); background: rgba(52,224,138,.12); border: 1px solid rgba(52,224,138,.3); padding: 4px 12px; border-radius: 999px; }
+  .live-off { color: #ff6b6b; background: rgba(255,107,107,.12); border: 1px solid rgba(255,107,107,.3); padding: 4px 12px; border-radius: 999px; }
+  .live-list { max-height: 340px; overflow-y: auto; padding-right: 6px; }
+  .live-list::-webkit-scrollbar { width: 6px; }
+  .live-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 999px; }
+  .live-item {
+    display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 14px; align-items: center;
+    padding: 10px 12px; border-radius: 12px; font-size: .9rem;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .live-item:hover { background: rgba(255,255,255,.05); }
+  .live-item .lu { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .live-item .la { font-weight: 800; }
+  .live-item .la.pos { color: var(--green); }
+  .live-item .la.neg { color: #ff6b6b; }
+  .live-item .ls { color: var(--muted); font-size: .8rem; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .live-item .lt { color: var(--muted); font-size: .75rem; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-14px); background: rgba(124,92,255,.18); } to { opacity: 1; transform: translateY(0); } }
+  .live-item.slide-in { animation: slideIn .6s ease; }
+  .live-note { margin-top: 14px; color: var(--muted); font-size: .78rem; text-align: center; }
+
+  /* CTA */
+  .cta {
+    background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(0,212,255,.12));
+    border: 1px solid rgba(124,92,255,.35);
+    border-radius: 24px; padding: 60px 40px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .cta h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); margin-bottom: 14px; }
+  .cta p { color: var(--muted); margin-bottom: 28px; }
+
+  /* Footer */
+  footer {
+    padding: 40px 6%; text-align: center; color: var(--muted);
+    border-top: 1px solid rgba(255,255,255,.06); font-size: .85rem;
+  }
+  footer a { color: var(--muted); text-decoration: none; margin: 0 12px; }
+  footer a:hover { color: var(--text); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+    .steps { grid-template-columns: 1fr; }
+    .why { grid-template-columns: 1fr; }
+    .rewards { grid-template-columns: repeat(2, 1fr); }
+    nav .links { display: none; }
+  }
+  @media (max-width: 520px) { .rewards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <div class="logo"><span class="moon"></span>MoonBazaar</div>
+  <div class="links">
+    <a href="#how">How It Works</a>
+    <a href="#why">Why Us</a>
+    <a href="#rewards">Rewards</a>
+    <a href="#faq">Support</a>
+  </div>
+  <a href="https://mnb.ee?ar=49446" class="btn btn-primary">Start Earning →</a>
+</nav>
+
+<!-- Hero -->
+<header>
+  <div class="hero-grid">
+    <div>
+      <span class="badge"><span class="dot"></span>Trusted Reward Panel · 2026</span>
+      <h1>Turn Your Spare Time<br>into <span class="grad">Real Rewards</span></h1>
+      <p class="sub">Complete simple tasks, surveys, and offers from trusted providers.
+         No private info required — just earn points and redeem them for CDKs, gift cards &amp; more.</p>
+      <div class="hero-actions">
+        <a href="https://mnb.ee?ar=49446" class="btn btn-primary">🚀 Start Earning Now</a>
+      </div>
+      <div class="trust">
+        <div><b>10-20%</b>Less time to earn</div>
+        <div><b>48h</b>Support resolution</div>
+        <div><b>100%</b>Free to join</div>
+      </div>
+    </div>
+
+    <!-- Live demo card -->
+    <div class="hero-card">
+      <div class="row">
+        <h3>🔥 Today's Top Offers</h3>
+        <span class="chip">● Live</span>
+      </div>
+      <div class="offer">
+        <div class="ico" style="background:rgba(124,92,255,.2)">📋</div>
+        <div class="meta"><div class="t">Market Research Survey</div><div class="s">≈ 8 min · Mobile</div></div>
+        <div class="pts">+320 pts</div>
+      </div>
+      <div class="offer">
+        <div class="ico" style="background:rgba(0,212,255,.2)">📱</div>
+        <div class="meta"><div class="t">App Trial — Music App</div><div class="s">≈ 3 days · Free</div></div>
+        <div class="pts">+1,150 pts</div>
+      </div>
+      <div class="offer">
+        <div class="ico" style="background:rgba(255,209,102,.2)">🎮</div>
+        <div class="meta"><div class="t">Game Reach Level 5</div><div class="s">≈ 20 min · PC</div></div>
+        <div class="pts">+2,000 pts</div>
+      </div>
+      <div class="progress">
+        <div class="top"><span>Your progress this week</span><span>6,800 / 10,000 pts</span></div>
+        <div class="bar"><span></span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Live Feed -->
+<section id="live">
+  <div class="sec-head">
+    <h2>🌍 实时动态</h2>
+    <p>全球用户刚刚完成的奖励，来自官方接口实时推送。</p>
+  </div>
+  <div class="live-wrap">
+    <div class="live-head">
+      <h3>⚡ Live Feed — 最新入账</h3>
+      <div class="status" id="live-status">连接中…</div>
+    </div>
+    <div class="live-list" id="live-feed">
+      <div style="color:var(--muted);text-align:center;padding:30px 0">加载中…</div>
+    </div>
+    <div class="live-note">数据源: moonbazaar.xyz /home/get_live_feed.php + SSE 实时推送</div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how">
+  <div class="sec-head">
+    <h2>How It Works — 3 Easy Steps</h2>
+    <p>From sign-up to payout in minutes. Here's how MoonBazaar works.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <h3>Create Your Account</h3>
+      <p>Signing up is fast, free, and secure. All you need is an email to join the MoonBazaar community.</p>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <h3>Complete Surveys &amp; Offers</h3>
+      <p>Browse our reward survey panel and offer walls to choose from surveys, app trials, and other simple tasks.</p>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <h3>Withdraw Rewards</h3>
+      <p>Once you've earned enough points, redeem them for CDKs, gift cards, and more.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Why us -->
+<section id="why">
+  <div class="sec-head">
+    <h2>Why Choose MoonBazaar?</h2>
+    <p>We built the panel we always wanted — better payouts, less friction.</p>
+  </div>
+  <div class="why">
+    <div class="why-card">
+      <div class="ico">⚡</div>
+      <div>
+        <h3>More Rewards, Less Time</h3>
+        <p>Our reward prices are lower and point values are higher than most similar panels.</p>
+        <span class="tag">Save 10-20% of your time</span>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="ico">🎧</div>
+      <div>
+        <h3>Fast Customer Support</h3>
+        <p>Guaranteed issue resolution within 48 hours on weekdays. Real humans, real answers.</p>
+        <span class="tag">48h resolution guarantee</span>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="ico">🔒</div>
+      <div>
+        <h3>Privacy First</h3>
+        <p>No private info required to start. Your data stays yours — that's the deal.</p>
+        <span class="tag">No private info required</span>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="ico">🎁</div>
+      <div>
+        <h3>Rewards That Matter</h3>
+        <p>CDKs, gift cards, and more — a wide range of redemption options for every region.</p>
+        <span class="tag">Multiple reward types</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Rewards -->
+<section id="rewards">
+  <div class="sec-head">
+    <h2>Redeem Your Points</h2>
+    <p>Popular ways to spend what you've earned.</p>
+  </div>
+  <div class="rewards">
+    <div class="reward">
+      <div class="ico">🎮</div><h4>Game CDKs</h4>
+      <p>Steam, Epic &amp; more</p><span class="pts">from 5,000 pts</span>
+    </div>
+    <div class="reward">
+      <div class="ico">🎁</div><h4>Gift Cards</h4>
+      <p>Amazon, iTunes &amp; more</p><span class="pts">from 8,000 pts</span>
+    </div>
+    <div class="reward">
+      <div class="ico">💳</div><h4>E-Wallet Credits</h4>
+      <p>PayPal &amp; regional wallets</p><span class="pts">from 12,000 pts</span>
+    </div>
+    <div class="reward">
+      <div class="ico">🏆</div><h4>Exclusive Drops</h4>
+      <p>Monthly limited rewards</p><span class="pts">Check panel</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="cta">
+    <h2>Ready to start earning under the moon? 🌙</h2>
+    <p>Join thousands of members already cashing in their spare minutes.</p>
+    <a href="https://mnb.ee?ar=49446" class="btn btn-gold">✨ Create Free Account</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p style="margin-top:14px">MoonBazaar — A Global Reward Survey Panel</p>
+</footer>
+
+<script>
+// ---------- Live Feed: 官方 API + SSE, 经本地代理转发 ----------
+(function () {
+  var container = document.getElementById('live-feed');
+  var statusEl = document.getElementById('live-status');
+  var API_BASE = 'http://localhost:8787'; // 本地代理(见 mb-proxy/server.js)
+
+  function esc(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(String(s)));
+    return d.innerHTML;
+  }
+  function setStatus(text, ok) {
+    statusEl.textContent = text;
+    statusEl.className = 'status ' + (ok ? 'live-on' : 'live-off');
+  }
+  function addItem(item, isNew) {
+    var val = parseFloat(item.robux_val) || 0;
+    var neg = val < 0;
+    var div = document.createElement('div');
+    div.className = 'live-item' + (isNew ? ' slide-in' : '');
+    div.innerHTML =
+      '<span class="lu">' + esc(item.username) + '</span>' +
+      '<span class="la ' + (neg ? 'neg' : 'pos') + '">' + (neg ? '' : '+') + Math.abs(val) + '</span>' +
+      '<span class="ls">' + esc(item.source) + '</span>' +
+      '<span class="lt">' + esc(item.time_ago) + '</span>';
+    container.insertBefore(div, container.firstChild);
+    while (container.children.length > 20) container.removeChild(container.lastChild);
+  }
+  function loadHistory() {
+    return fetch(API_BASE + '/api/live?limit=20&offset=0')
+      .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); })
+      .then(function (data) {
+        container.innerHTML = '';
+        data.forEach(function (i) { addItem(i, false); });
+        setStatus('● LIVE 已连接', true);
+      })
+      .catch(function () { setStatus('无法连接代理', false); throw new Error('proxy down'); });
+  }
+  function startPolling() { // 无 SSE 时的降级: 15s 轮询
+    setInterval(function () { loadHistory().catch(function () {}); }, 15000);
+  }
+  function startSSE() {
+    if (!window.EventSource) { startPolling(); return; }
+    var es;
+    try { es = new EventSource(API_BASE + '/api/stream'); } catch (e) { startPolling(); return; }
+    es.onmessage = function (e) {
+      try { addItem(JSON.parse(e.data), true); } catch (err) {}
+    };
+    es.onerror = function () {
+      es.close();
+      startPolling(); // SSE 断开后转轮询
+    };
+  }
+  loadHistory().then(startSSE).catch(startPolling);
+})();
+</script>
+</body>
+</html>

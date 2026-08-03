@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonBazaar 宣传页 — 问卷赚奖励,轻松换 CDK 与礼品卡</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: radial-gradient(1000px 600px at 85% -5%, #2a1a5e 0%, transparent 55%),
+                radial-gradient(800px 500px at 5% 15%, #0d2b4a 0%, transparent 50%),
+                #0b0e1a;
+    color: #eef1ff;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  a { text-decoration: none; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero { text-align: center; padding: 90px 24px 60px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(52,224,138,.12); color: #34e08a;
+    border: 1px solid rgba(52,224,138,.35);
+    padding: 6px 16px; border-radius: 999px; font-size: .85rem; font-weight: 700;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+    font-weight: 900; line-height: 1.15; letter-spacing: -.5px; margin-bottom: 18px;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(90deg, #00d4ff, #7c5cff, #ff9f43);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.sub { color: #9aa3c7; font-size: 1.15rem; max-width: 640px; margin: 0 auto 32px; }
+  .hero .cta {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffd166, #ff9f43);
+    color: #3a2500; font-weight: 800; font-size: 1.1rem;
+    padding: 16px 44px; border-radius: 999px;
+    box-shadow: 0 12px 36px rgba(255,159,67,.4);
+    transition: .25s;
+  }
+  .hero .cta:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 18px 44px rgba(255,159,67,.55); }
+  .hero .hint { margin-top: 14px; color: #6a71a8; font-size: .85rem; }
+
+  /* Stats */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+    margin: 20px auto 70px; max-width: 900px;
+  }
+  .stat {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 22px 12px; text-align: center;
+  }
+  .stat b { display: block; font-size: 1.7rem; color: #ffd166; }
+  .stat span { font-size: .85rem; color: #9aa3c7; }
+
+  /* Sections */
+  section { padding: 20px 0 70px; }
+  .sec-head { text-align: center; margin-bottom: 44px; }
+  .sec-head h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 800; margin-bottom: 10px; }
+  .sec-head p { color: #9aa3c7; }
+
+  /* Features */
+  .feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .feat {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 18px; padding: 28px; text-align: center; transition: .25s;
+  }
+  .feat:hover { transform: translateY(-6px); border-color: rgba(124,92,255,.5); }
+  .feat .ico {
+    width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 16px;
+    display: grid; place-items: center; font-size: 1.6rem;
+    background: rgba(124,92,255,.15); border: 1px solid rgba(124,92,255,.35);
+  }
+  .feat h3 { margin-bottom: 8px; font-size: 1.1rem; }
+  .feat p { color: #9aa3c7; font-size: .92rem; }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .step {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 24px; position: relative;
+  }
+  .step .n {
+    width: 38px; height: 38px; border-radius: 50%; margin-bottom: 14px;
+    display: grid; place-items: center; font-weight: 900;
+    background: linear-gradient(135deg, #7c5cff, #00d4ff); color: #fff;
+  }
+  .step h3 { font-size: 1.05rem; margin-bottom: 6px; }
+  .step p { color: #9aa3c7; font-size: .9rem; }
+
+  /* Rewards */
+  .rewards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .reward {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 22px; text-align: center;
+  }
+  .reward .ico { font-size: 2rem; margin-bottom: 10px; }
+  .reward h4 { margin-bottom: 4px; }
+  .reward p { color: #9aa3c7; font-size: .82rem; }
+  .reward .pts { color: #ffd166; font-weight: 800; display: block; margin-top: 8px; }
+
+  /* Live feed strip */
+  .live-strip {
+    background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px; padding: 18px 20px; margin-top: 60px;
+  }
+  .live-strip .head { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: 10px; }
+  .live-strip .head b { color: #34e08a; }
+  .live-list { max-height: 200px; overflow-y: auto; font-size: .88rem; }
+  .live-list .it {
+    display: flex; justify-content: space-between; gap: 14px;
+    padding: 7px 10px; border-radius: 8px;
+  }
+  .live-list .it:nth-child(odd) { background: rgba(255,255,255,.04); }
+  .live-list .it .u { font-weight: 700; }
+  .live-list .it .a { color: #34e08a; font-weight: 800; }
+  .live-list .it .s { color: #9aa3c7; }
+  .live-list .it .t { color: #6a71a8; font-size: .78rem; }
+
+  /* Testimonials */
+  .testis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .testi {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px; padding: 22px;
+  }
+  .testi .stars { color: #ffd166; margin-bottom: 8px; }
+  .testi p { font-size: .9rem; color: #c9cff0; margin-bottom: 12px; }
+  .testi .who { font-size: .82rem; color: #9aa3c7; font-weight: 700; }
+
+  /* CTA bottom */
+  .cta-box {
+    text-align: center; padding: 60px 30px; margin-bottom: 60px;
+    background: linear-gradient(135deg, rgba(124,92,255,.2), rgba(0,212,255,.12));
+    border: 1px solid rgba(124,92,255,.4); border-radius: 24px;
+  }
+  .cta-box h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); margin-bottom: 12px; }
+  .cta-box p { color: #9aa3c7; margin-bottom: 26px; }
+  .cta-box .cta { display: inline-block; background: linear-gradient(135deg, #ffd166, #ff9f43);
+    color: #3a2500; font-weight: 800; font-size: 1.05rem; padding: 15px 40px; border-radius: 999px;
+    box-shadow: 0 12px 36px rgba(255,159,67,.4); transition: .25s; }
+  .cta-box .cta:hover { transform: translateY(-3px); }
+
+  footer { text-align: center; padding: 30px 0 50px; color: #6a71a8; font-size: .85rem; }
+  footer a { color: #8a92c8; margin: 0 10px; }
+  footer a:hover { color: #fff; }
+
+  @media (max-width: 800px) {
+    .stats, .feats, .steps, .testis { grid-template-columns: 1fr 1fr; }
+    .rewards { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 520px) { .stats, .feats, .steps, .testis, .rewards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="badge">✅ 免费注册 · 无需隐私信息 · 全球可信赖平台</span>
+  <h1>你的空闲时间,<br>值得换来 <span class="grad">真金白银</span></h1>
+  <p class="sub">填问卷、试应用、做任务 —— MoonBazaar 让你的碎片时间变成
+    游戏 CDK、礼品卡和更多惊喜奖励。</p>
+  <a class="cta" href="https://mnb.ee?ar=49446">🚀 立即免费注册</a>
+  <div class="hint">注册仅需一个邮箱 · 3 分钟上手 · 每天都能赚</div>
+</div>
+
+<div class="wrap">
+  <!-- 数据 -->
+  <div class="stats">
+    <div class="stat"><b>48,000+</b><span>注册用户</span></div>
+    <div class="stat"><b>1,200+</b><span>在线任务</span></div>
+    <div class="stat"><b>300万+</b><span>已发放积分</span></div>
+    <div class="stat"><b>48h</b><span>客服响应保障</span></div>
+  </div>
+
+  <!-- 卖点 -->
+  <section>
+    <div class="sec-head">
+      <h2>为什么选 MoonBazaar?</h2>
+      <p>我们重新定义了奖励问卷平台 —— 更多奖励,更少时间。</p>
+    </div>
+    <div class="feats">
+      <div class="feat">
+        <div class="ico">⚡</div>
+        <h3>比同类快 10-20%</h3>
+        <p>奖励价格更低、积分价值更高,同样时间赚更多,省钱省心。</p>
+      </div>
+      <div class="feat">
+        <div class="ico">🎧</div>
+        <h3>48 小时客服保障</h3>
+        <p>工作日问题保证 48 小时内解决,真人客服,不踢皮球。</p>
+      </div>
+      <div class="feat">
+        <div class="ico">🔒</div>
+        <h3>隐私安全第一</h3>
+        <p>开始无需任何隐私信息,你的数据永远属于你自己。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 步骤 -->
+  <section>
+    <div class="sec-head">
+      <h2>3 步开始赚钱</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>创建账号</h3><p>免费、快速、安全,一个邮箱搞定。</p></div>
+      <div class="step"><div class="n">2</div><h3>完成任务</h3><p>问卷、应用试用、游戏任务,任你挑选。</p></div>
+      <div class="step"><div class="n">3</div><h3>兑换奖励</h3><p>CDK、礼品卡、电子钱包,积分即兑。</p></div>
+    </div>
+  </section>
+
+  <!-- 奖励 -->
+  <section>
+    <div class="sec-head">
+      <h2>丰富奖励等你兑换</h2>
+    </div>
+    <div class="rewards">
+      <div class="reward"><div class="ico">🎮</div><h4>游戏 CDK</h4><p>Steam / Epic 等平台</p><span class="pts">999 分起</span></div>
+      <div class="reward"><div class="ico">🎁</div><h4>礼品卡</h4><p>Amazon、iTunes 等</p><span class="pts">1899 分起</span></div>
+      <div class="reward"><div class="ico">💳</div><h4>电子钱包</h4><p>PayPal 及地区钱包</p><span class="pts">500 分起</span></div>
+    </div>
+  </section>
+
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h2>别再让碎片时间溜走 🌙</h2>
+    <p>加入 MoonBazaar,把每一分钟都变成奖励。</p>
+    <a class="cta" href="https://mnb.ee?ar=49446">✨ 免费注册,马上开赚</a>
+  </div>
+</div>
+
+<footer>
+  MoonBazaar — 全球奖励问卷平台
+</footer>
+
+</body>
+</html>
