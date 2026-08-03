@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonBazaar — 选择页面版本</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0b0e1a;
+    color: #e8e8f0;
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-image:
+      radial-gradient(ellipse at 50% -20%, rgba(120, 90, 255, 0.25), transparent 60%),
+      radial-gradient(ellipse at 80% 110%, rgba(255, 90, 160, 0.15), transparent 50%);
+  }
+  .card {
+    max-width: 620px;
+    width: 100%;
+    background: #10131f;
+    border: 2px solid #ffd970;
+    border-radius: 16px;
+    padding: 44px 40px;
+    box-shadow: 0 0 40px rgba(120, 90, 255, 0.25);
+  }
+  .moon {
+    display: inline-block;
+    width: 14px; height: 14px;
+    background: radial-gradient(circle at 35% 35%, #fff3c4, #ffd970 60%, #e8a020);
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ffd970;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  h1 { font-size: 28px; letter-spacing: 2px; color: #ffd970; }
+  .sub { margin-top: 8px; color: #9aa0c8; font-size: 14px; }
+  .desc { margin-top: 24px; font-size: 13px; color: #c3c8e8; line-height: 1.9; }
+  .opts { margin-top: 28px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  /* ===== 推荐：炸裂版，大 ===== */
+  .opt-main {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+    border-radius: 16px;
+    padding: 30px 28px;
+    border: 3px solid #ffd970;
+    background: linear-gradient(135deg, #1c2140, #161a2e);
+    box-shadow: 0 0 40px rgba(255, 217, 112, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+  .opt-main:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 60px rgba(255, 217, 112, 0.55);
+  }
+  .opt-main .rec {
+    position: absolute;
+    top: -14px;
+    right: 18px;
+    background: #ff6ec7;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    box-shadow: 0 0 16px rgba(255, 110, 199, 0.6);
+  }
+  .opt-main b { display: block; font-size: 24px; color: #fff; }
+  .opt-main span { display: block; margin-top: 8px; font-size: 14px; color: #b9bee6; }
+  .opt-main .tag {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    padding: 5px 16px;
+    border-radius: 20px;
+    background: rgba(255, 110, 199, 0.15);
+    color: #ff9dd8;
+    border: 1px solid #ff6ec7;
+  }
+  /* ===== 备选：流畅版，小 ===== */
+  .opt-mini {
+    display: block;
+    width: 72%;
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    border: 1px solid #2c3255;
+    background: #141828;
+    opacity: 0.75;
+    transition: opacity 0.15s, border-color 0.15s;
+  }
+  .opt-mini:hover {
+    opacity: 1;
+    border-color: #6cf0a8;
+  }
+  .opt-mini b { display: block; font-size: 14px; color: #cfd3f0; }
+  .opt-mini span { display: block; margin-top: 3px; font-size: 12px; color: #7d84ab; }
+  .opt-mini .tag {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: rgba(108, 240, 168, 0.12);
+    color: #6cf0a8;
+    border: 1px solid #2a8a5c;
+  }
+  .foot { margin-top: 28px; text-align: center; font-size: 12px; color: #6a7096; }
+  .foot a { color: #9fb0ff; text-decoration: none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1><span class="moon"></span>MoonBazaar</h1>
+    <div class="sub">A Global Reward Survey Panel — 选择你的页面版本</div>
+    <div class="desc">同一个 MoonBazaar，两种打开方式：<br>一份留给想感受惊喜的你，一份留给赶时间的你。</div>
+
+    <div class="opts">
+      <a class="opt-main" href="MoonBazaar推广页.html">
+        <span class="rec">★ 强烈推荐</span>
+        <b>✨ 踏入星光漩涡，让整片宇宙为你闪烁</b>
+        <span>全屏星河在指尖绽放，彩虹拖尾划过夜空，霓虹光环缠绕四周——<br>点开它，赚钱也能像一场视觉盛宴。</span>
+        <span class="tag">视觉盛宴 · 沉浸体验 · 一眼难忘</span>
+      </a>
+      <a class="opt-mini" href="MoonBazaar推广页-流畅版.html">
+        <b>🚀 轻装快行</b>
+        <span>不吵不闹，安静加载，直达目标</span>
+        <span class="tag">极速 · 清爽 · 低配友好</span>
+      </a>
+    </div>
+
+    <div class="foot">
+      还没想好？先去看看 <a href="https://mnb.ee?ar=49446" target="_blank" rel="noopener">MoonBazaar.xyz →</a>
+    </div>
+  </div>
+</body>
+</html>

