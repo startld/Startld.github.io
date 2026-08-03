@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MoonBazaar 问卷大亨 🎮 — 答题赚币抽 CDK 卡包</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: radial-gradient(900px 500px at 85% -5%, #2a1a5e 0%, transparent 55%),
+                radial-gradient(700px 500px at 5% 15%, #0d2b4a 0%, transparent 50%),
+                #0b0e1a;
+    color: #eef1ff; overflow: hidden; touch-action: manipulation; user-select: none;
+  }
+  #app { max-width: 520px; margin: 0 auto; height: 100dvh; display: flex; flex-direction: column; }
+
+  /* ---------- 顶栏 ---------- */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; background: rgba(255,255,255,.05);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .topbar .coins { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; color: #ffd166; }
+  .topbar .streak { font-size: .85rem; color: #9aa3c7; }
+  .topbar .streak b { color: #ff9f43; }
+  .icon-btn {
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+    color: #eef1ff; border-radius: 12px; padding: 8px 12px; font-size: .9rem; cursor: pointer;
+  }
+  .icon-btn:active { transform: scale(.95); }
+
+  /* ---------- 主屏 ---------- */
+  .screen { flex: 1; display: flex; flex-direction: column; padding: 18px 16px; overflow-y: auto; }
+
+  /* 开始屏 */
+  .start { justify-content: center; align-items: center; text-align: center; gap: 14px; }
+  .start .logo { font-size: 4rem; }
+  .start h1 { font-size: 2rem; font-weight: 900; }
+  .start h1 .grad { background: linear-gradient(90deg,#00d4ff,#7c5cff,#ff9f43); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .start p { color: #9aa3c7; font-size: .95rem; max-width: 320px; }
+  .big-btn {
+    width: 100%; max-width: 320px; padding: 16px; border: none; border-radius: 999px;
+    font-size: 1.15rem; font-weight: 800; cursor: pointer; color: #3a2500;
+    background: linear-gradient(135deg, #ffd166, #ff9f43);
+    box-shadow: 0 10px 30px rgba(255,159,67,.35);
+  }
+  .big-btn:active { transform: scale(.97); }
+  .ghost-btn {
+    width: 100%; max-width: 320px; padding: 13px; border-radius: 999px; cursor: pointer;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15);
+    color: #eef1ff; font-size: .95rem; font-weight: 700;
+  }
+  .aff { margin-top: 8px; font-size: .8rem; color: #6a71a8; }
+  .aff a { color: #8a92c8; }
+
+  /* 游戏屏 */
+  .quiz { justify-content: space-between; }
+  .q-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .q-num { color: #9aa3c7; font-size: .85rem; }
+  .timer { font-size: 1.3rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .timer.warn { color: #ff6b6b; }
+  .timer-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; margin-bottom: 18px; }
+  .timer-bar span { display: block; height: 100%; background: linear-gradient(90deg,#34e08a,#ffd166); transition: width .1s linear; }
+  .q-card {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 18px; padding: 20px; margin-bottom: 16px;
+  }
+  .q-card .tag { font-size: .75rem; color: #b9a8ff; background: rgba(124,92,255,.15); padding: 3px 10px; border-radius: 999px; display: inline-block; margin-bottom: 10px; }
+  .q-card h2 { font-size: 1.15rem; line-height: 1.45; }
+  .opts { display: grid; gap: 10px; }
+  .opt {
+    padding: 14px 16px; border-radius: 14px; cursor: pointer; text-align: left;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    color: #eef1ff; font-size: 1rem; font-weight: 600; transition: .15s;
+  }
+  .opt:active { transform: scale(.98); }
+  .opt.correct { background: rgba(52,224,138,.25); border-color: #34e08a; }
+  .opt.wrong { background: rgba(255,107,107,.25); border-color: #ff6b6b; }
+  .opt:disabled { opacity: .6; }
+  .combo {
+    text-align: center; font-size: .9rem; color: #9aa3c7; margin-top: 12px; min-height: 22px;
+  }
+  .combo b { color: #ff9f43; font-size: 1.05rem; }
+
+  /* 卡册屏 */
+  .album h2 { text-align: center; margin-bottom: 16px; font-size: 1.4rem; }
+  .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .card-slot {
+    aspect-ratio: 3/4; border-radius: 14px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px; text-align: center;
+    background: rgba(255,255,255,.05); border: 1px dashed rgba(255,255,255,.15); color: #6a71a8; font-size: .75rem; padding: 8px;
+  }
+  .card-slot.have { border-style: solid; }
+  .card-slot .emo { font-size: 1.8rem; }
+  .card-slot .cnt { font-size: .7rem; }
+  .card-slot.common.have { background: rgba(255,255,255,.08); border-color: #9aa3c7; }
+  .card-slot.rare.have { background: rgba(45,140,255,.15); border-color: #2d8cff; }
+  .card-slot.epic.have { background: rgba(168,85,247,.15); border-color: #a855f7; }
+  .card-slot.legend.have { background: rgba(255,209,102,.15); border-color: #ffd166; }
+
+  /* 商店/结果弹层 */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none;
+    align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    width: 100%; max-width: 400px; background: #151a3a; border: 1px solid rgba(255,255,255,.15);
+    border-radius: 22px; padding: 22px; text-align: center; max-height: 85dvh; overflow-y: auto;
+  }
+  .modal h3 { margin-bottom: 14px; font-size: 1.3rem; }
+  .packs { display: grid; gap: 12px; }
+  .pack {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px; border-radius: 14px; cursor: pointer; text-align: left;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14);
+  }
+  .pack:active { transform: scale(.98); }
+  .pack .emo { font-size: 1.8rem; }
+  .pack .info b { display: block; font-size: 1rem; }
+  .pack .info span { font-size: .78rem; color: #9aa3c7; }
+  .pack .price { font-weight: 800; color: #ffd166; white-space: nowrap; }
+  .pack.locked { opacity: .45; }
+
+  /* 抽卡结果 */
+  .result-card {
+    width: 150px; height: 200px; margin: 16px auto; border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    border: 2px solid; animation: pop .5s ease;
+  }
+  .result-card .emo { font-size: 3rem; }
+  .result-card .name { font-size: 1rem; font-weight: 800; padding: 0 10px; text-align: center; }
+  .result-card .val { font-size: .8rem; opacity: .85; }
+  .result-card.common { border-color: #9aa3c7; background: rgba(154,163,199,.15); color: #c9cff0; }
+  .result-card.rare { border-color: #2d8cff; background: rgba(45,140,255,.15); color: #8ec5ff; }
+  .result-card.epic { border-color: #a855f7; background: rgba(168,85,247,.15); color: #d8b4fe; }
+  .result-card.legend { border-color: #ffd166; background: rgba(255,209,102,.15); color: #ffe9a8; animation: pop .5s ease, glow 1.2s ease infinite alternate; }
+  @keyframes pop { 0% { transform: scale(.3); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes glow { from { box-shadow: 0 0 10px rgba(255,209,102,.4); } to { box-shadow: 0 0 34px rgba(255,209,102,.9); } }
+  .modal .note { font-size: .8rem; color: #9aa3c7; margin-bottom: 14px; }
+  .close-btn { width: 100%; padding: 13px; border-radius: 999px; border: none; cursor: pointer;
+    font-size: 1rem; font-weight: 800; background: linear-gradient(135deg,#7c5cff,#00d4ff); color: #fff; }
+  .stat-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: .9rem; color: #9aa3c7; border-bottom: 1px dashed rgba(255,255,255,.08); }
+  .stat-line b { color: #eef1ff; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="coins">🪙 <span id="coins">0</span></div>
+    <div class="streak">🔥 连击 <b id="streak">0</b>x</div>
+    <button class="icon-btn" id="btnShop">🎒 商店</button>
+  </div>
+
+  <!-- 开始屏 -->
+  <div class="screen start" id="scrStart">
+    <div class="logo">🌙</div>
+    <h1>问卷大亨<br><span class="grad">MoonBazaar 版</span></h1>
+    <p>答题赚金币,抽 CDK 卡包,收集全部稀有卡!答对越多,连击加成越高!</p>
+    <button class="big-btn" id="btnStart">▶ 开始答题</button>
+    <button class="ghost-btn" id="btnAlbumStart">🃏 我的卡册</button>
+    <div class="aff">想赚<b>真实</b>奖励?<a href="https://mnb.ee?ar=49446"> 了解 MoonBazaar →</a></div>
+  </div>
+
+  <!-- 游戏屏 -->
+  <div class="screen quiz" id="scrQuiz" style="display:none">
+    <div>
+      <div class="q-head">
+        <span class="q-num" id="qNum">第 1 题</span>
+        <span class="timer" id="timer">8</span>
+      </div>
+      <div class="timer-bar"><span id="tbar"></span></div>
+      <div class="q-card">
+        <span class="tag" id="qTag">问卷</span>
+        <h2 id="qText">题目加载中…</h2>
+      </div>
+      <div class="opts" id="opts"></div>
+      <div class="combo" id="combo"></div>
+    </div>
+  </div>
+
+  <!-- 卡册屏 -->
+  <div class="screen album" id="scrAlbum" style="display:none">
+    <h2>🃏 我的卡册</h2>
+    <div class="album-grid" id="albumGrid"></div>
+    <div style="height:14px"></div>
+    <button class="ghost-btn" id="btnBackAlbum">← 返回</button>
+    <div style="height:14px"></div>
+  </div>
+</div>
+
+<!-- 商店弹层 -->
+<div class="overlay" id="ovShop">
+  <div class="modal">
+    <h3>🎒 卡包商店</h3>
+    <div class="packs" id="packs"></div>
+    <div style="height:14px"></div>
+    <button class="close-btn" id="btnCloseShop">关闭</button>
+  </div>
+</div>
+
+<!-- 抽卡结果弹层 -->
+<div class="overlay" id="ovResult">
+  <div class="modal">
+    <h3 id="resTitle">开包结果</h3>
+    <div class="result-card common" id="resCard">
+      <div class="emo">🎮</div>
+      <div class="name">CDK 小卡</div>
+      <div class="val">≈10 币</div>
+    </div>
+    <div class="note" id="resNote">已放入卡册</div>
+    <button class="close-btn" id="btnCloseResult">继续答题</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  // ---------- 题库 ----------
+  var QS = [
+    { q: '完成一份问卷大约需要多久?', o: ['30 秒', '5-10 分钟', '1 小时', '一整天'], a: 1, t: '问卷' },
+    { q: '下列哪个不是"有偿问卷"的常见奖励?', o: ['礼品卡', '游戏 CDK', '免费午餐', '电子钱包'], a: 2, t: '问卷' },
+    { q: '正规问卷平台会要求你提供什么?', o: ['银行卡密码', '一个邮箱', '身份证照片', '家庭住址门牌号'], a: 1, t: '问卷' },
+    { q: '填写问卷前,最应该做什么?', o: ['直接开填', '确认平台正规性', '先充钱', '关掉电脑'], a: 1, t: '问卷' },
+    { q: '遇到"先交钱再答题"的平台,应该?', o: ['马上交钱', '赶紧跑', '交一半试试', '借钱交'], a: 1, t: '问卷' },
+    { q: '地球的天然卫星是?', o: ['太阳', '月球', '火星', '木星'], a: 1, t: '常识' },
+    { q: '一年有多少个月?', o: ['10', '11', '12', '13'], a: 2, t: '常识' },
+    { q: '彩虹通常有几种颜色?', o: ['5', '6', '7', '8'], a: 2, t: '常识' },
+    { q: '企鹅主要生活在?', o: ['热带雨林', '南极', '撒哈拉沙漠', '喜马拉雅山'], a: 1, t: '常识' },
+    { q: '水的化学式是?', o: ['CO2', 'O2', 'H2O', 'NaCl'], a: 2, t: '常识' },
+    { q: '一天有多少小时?', o: ['12', '24', '36', '60'], a: 1, t: '常识' },
+    { q: '太阳从哪个方向升起?', o: ['东', '西', '南', '北'], a: 0, t: '常识' },
+    { q: '世界上面积最大的海洋是?', o: ['大西洋', '印度洋', '北冰洋', '太平洋'], a: 3, t: '常识' },
+    { q: '人体最大的器官是?', o: ['心脏', '肝脏', '皮肤', '大脑'], a: 2, t: '常识' },
+    { q: '钢琴有多少个白键?', o: ['52', '61', '76', '88'], a: 0, t: '常识' },
+    { q: '哪颗行星被称为"红色星球"?', o: ['金星', '火星', '水星', '海王星'], a: 1, t: '常识' },
+    { q: '蜜蜂采蜜靠什么器官?', o: ['翅膀', '口器', '腿', '触角'], a: 1, t: '常识' },
+    { q: '"月兔"是哪个神话里的角色?', o: ['嫦娥奔月', '夸父逐日', '精卫填海', '愚公移山'], a: 0, t: '月球' },
+    { q: '人类第一次登月是在哪一年?', o: ['1959', '1969', '1979', '1989'], a: 1, t: '月球' },
+    { q: '月球绕地球一圈约需多久?', o: ['1 天', '7 天', '约 27 天', '1 年'], a: 2, t: '月球' },
+    { q: '月亮本身会发光吗?', o: ['会,自己发光', '不会,反射太阳光', '偶尔发光', '只在下雨天发光'], a: 1, t: '月球' },
+    { q: '潮汐现象主要与什么有关?', o: ['月球引力', '风', '鱼群', '海底火山'], a: 0, t: '月球' },
+    { q: '"满月"时月球是什么形状?', o: ['月牙', '半圆', '圆盘', '方块'], a: 2, t: '月球' },
+    { q: 'Steam 平台主要用来?', o: ['点外卖', '玩游戏', '打车', '订机票'], a: 1, t: 'CDK' },
+    { q: '"CDK"通常指?', o: ['光盘', '兑换码', '硬盘', '键盘'], a: 1, t: 'CDK' },
+    { q: '兑换礼品卡时,最需要核对的是?', o: ['卡面颜色', '卡号与金额', '包装盒', '生产日期'], a: 1, t: 'CDK' },
+    { q: '下列哪个是正规的电子钱包?', o: ['PayPal', '空钱包', '玩具钱包', '纸钱包'], a: 0, t: 'CDK' },
+    { q: '收到陌生中奖短信让你点链接,应该?', o: ['马上点', '转发给朋友', '无视或举报', '回复验证码'], a: 2, t: '安全' },
+    { q: '你的账号密码最好?', o: ['设为 123456', '每个平台都一样', '唯一且复杂', '写在便签贴屏幕上'], a: 2, t: '安全' },
+    { q: '问卷平台给你发来"官方客服"加好友请求,第一反应?', o: ['通过并给验证码', '通过并转账', '核实身份后再决定', '直接拉黑'], a: 2, t: '安全' },
+    { q: '哪种情况最可能是诈骗?', o: ['答问卷得 10 币', '注册送 100 币', '充值 1000 返 10000', '推荐好友得奖励'], a: 2, t: '安全' },
+    { q: '玩游戏时弹出"你中奖了"窗口,正确的做法是?', o: ['输入账号密码', '下载附件', '关闭并忽略', '告诉所有人'], a: 2, t: '安全' }
+  ];
+
+  // ---------- 卡片定义 ----------
+  var RARITIES = [
+    { key: 'common', name: 'CDK 小卡', emo: '🎮', val: '≈10 币', color: '#9aa3c7' },
+    { key: 'rare', name: 'Steam $5 卡', emo: '💙', val: '≈50 币', color: '#2d8cff' },
+    { key: 'epic', name: 'iTunes 卡', emo: '💜', val: '≈200 币', color: '#a855f7' },
+    { key: 'legend', name: '白金会员', emo: '👑', val: '≈1000 币', color: '#ffd166' }
+  ];
+  var PACKS = [
+    { name: '青铜包', emo: '📦', price: 100, probs: [0.70, 0.25, 0.05, 0] },
+    { name: '黄金包', emo: '🎁', price: 500, probs: [0.30, 0.45, 0.20, 0.05] },
+    { name: '白金包', emo: '💎', price: 2000, probs: [0.05, 0.25, 0.45, 0.25] }
+  ];
+
+  // ---------- 状态 ----------
+  var S = { coins: 0, streak: 0, bestStreak: 0, cards: { common: 0, rare: 0, epic: 0, legend: 0 },
+           answered: 0, correct: 0, packs: 0 };
+  try {
+    var saved = JSON.parse(localStorage.getItem('mb_quiz_save') || 'null');
+    if (saved) S = Object.assign(S, saved);
+  } catch (e) {}
+
+  var LEVELS = ['问卷萌新', '问卷新手', '问卷熟手', '问卷达人', '问卷专家', '问卷大师', 'MoonBazaar 传奇'];
+  var TIME = 8;
+  var timerId = null, timeLeft = TIME, lock = false, curQ = null, qIdx = 0;
+
+  // ---------- DOM ----------
+  var $ = function (id) { return document.getElementById(id); };
+  var scrStart = $('scrStart'), scrQuiz = $('scrQuiz'), scrAlbum = $('scrAlbum');
+  var elCoins = $('coins'), elStreak = $('streak'), elTimer = $('timer'), elTBar = $('tbar'),
+      elQNum = $('qNum'), elQTag = $('qTag'), elQText = $('qText'), elOpts = $('opts'), elCombo = $('combo');
+
+  // ---------- 音效 (Web Audio) ----------
+  var AC = null;
+  function beep(f, d, type, vol) {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'sine'; o.frequency.value = f;
+      g.gain.value = vol || 0.15;
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + d);
+      o.connect(g); g.connect(AC.destination);
+      o.start(); o.stop(AC.currentTime + d);
+    } catch (e) {}
+  }
+  function sCorrect() { beep(660, .12); setTimeout(function(){ beep(880, .15); }, 90); }
+  function sWrong() { beep(180, .3, 'sawtooth'); }
+  function sCoin() { beep(1200, .08, 'square', .08); }
+  function sLegend() { [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){ beep(f,.2); }, i*120); }); }
+
+  // ---------- 渲染 ----------
+  function save() { try { localStorage.setItem('mb_quiz_save', JSON.stringify(S)); } catch (e) {} }
+  function render() {
+    elCoins.textContent = S.coins;
+    elStreak.textContent = S.streak;
+  }
+  function levelName() {
+    var lv = Math.min(LEVELS.length - 1, Math.floor(S.answered / 20));
+    return LEVELS[lv];
+  }
+  function show(name) {
+    [scrStart, scrQuiz, scrAlbum].forEach(function (s) { s.style.display = 'none'; });
+    $('scr' + name).style.display = 'flex';
+  }
+
+  // ---------- 答题逻辑 ----------
+  function nextQ() {
+    lock = false; timeLeft = TIME; elTimer.classList.remove('warn');
+    qIdx = (qIdx + 1) % QS.length;
+    curQ = QS[qIdx];
+    elQNum.textContent = '第 ' + (S.answered + 1) + ' 题 · ' + levelName();
+    elQTag.textContent = curQ.t;
+    elQText.textContent = curQ.q;
+    elOpts.innerHTML = '';
+    curQ.o.forEach(function (op, i) {
+      var b = document.createElement('button');
+      b.className = 'opt'; b.textContent = String.fromCharCode(65 + i) + '. ' + op;
+      b.onclick = function () { answer(i, b); };
+      elOpts.appendChild(b);
+    });
+    elCombo.textContent = S.streak >= 2 ? '🔥 连击 x' + S.streak + ' 加成中!' : '';
+    startTimer();
+  }
+  function startTimer() {
+    clearInterval(timerId);
+    timerId = setInterval(function () {
+      timeLeft -= 0.1;
+      elTimer.textContent = Math.ceil(timeLeft);
+      elTBar.style.width = (timeLeft / TIME * 100) + '%';
+      if (timeLeft <= 3) elTimer.classList.add('warn');
+      if (timeLeft <= 0) { clearInterval(timerId); onTimeout(); }
+    }, 100);
+  }
+  function endRound(ok) {
+    clearInterval(timerId); lock = true;
+    var btns = elOpts.querySelectorAll('.opt');
+    btns.forEach(function (b) { b.disabled = true; });
+    if (ok) {
+      btns[curQ.a].classList.add('correct');
+      S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak);
+      var mult = 1 + Math.min(2, Math.floor(S.streak / 3) * 0.5);
+      var gain = Math.round(10 * mult);
+      S.coins += gain; S.correct++;
+      sCorrect(); setTimeout(sCoin, 150);
+      elCombo.textContent = '✅ +' + gain + ' 🪙 (连击 x' + S.streak + ' ×' + mult + ')';
+    } else {
+      btns.forEach(function (b, i) { if (i === curQ.a) b.classList.add('correct'); });
+      S.streak = 0; sWrong();
+      elCombo.textContent = '❌ 连击中断,重新开始!';
+    }
+    S.answered++; render(); save();
+    setTimeout(nextQ, 1200);
+  }
+  function onTimeout() {
+    lock = true;
+    var btns = elOpts.querySelectorAll('.opt');
+    btns.forEach(function (b, i) { if (i === curQ.a) b.classList.add('correct'); });
+    S.streak = 0; sWrong();
+    elCombo.textContent = '⏰ 超时了!正确答案是 ' + String.fromCharCode(65 + curQ.a);
+    S.answered++; render(); save();
+    setTimeout(nextQ, 1400);
+  }
+  function answer(i, btn) {
+    if (lock) return;
+    if (i === curQ.a) { endRound(true); }
+    else { btn.classList.add('wrong'); endRound(false); }
+  }
+
+  // ---------- 商店 / 抽卡 ----------
+  function openShop() {
+    var p = $('packs'); p.innerHTML = '';
+    PACKS.forEach(function (pk, i) {
+      var d = document.createElement('div');
+      d.className = 'pack' + (S.coins < pk.price ? ' locked' : '');
+      d.innerHTML = '<span class="emo">' + pk.emo + '</span><div class="info"><b>' + pk.name + '</b><span>' +
+        ['大概率普通卡','稀有卡概率高','传说卡概率高'][i] + '</span></div><span class="price">' + pk.price + ' 🪙</span>';
+      d.onclick = function () { openPack(i); };
+      p.appendChild(d);
+    });
+    $('ovShop').classList.add('show');
+  }
+  function rollRarity(probs) {
+    var r = Math.random(), acc = 0;
+    for (var i = 0; i < probs.length; i++) { acc += probs[i]; if (r < acc) return i; }
+    return 0;
+  }
+  function openPack(i) {
+    var pk = PACKS[i];
+    if (S.coins < pk.price) { beep(150, .2, 'sawtooth'); return; }
+    S.coins -= pk.price; S.packs++;
+    var ri = rollRarity(pk.probs), rar = RARITIES[ri];
+    S.cards[rar.key]++; render(); save();
+    $('ovShop').classList.remove('show');
+
+    var card = $('resCard');
+    card.className = 'result-card ' + rar.key;
+    card.querySelector('.emo').textContent = rar.emo;
+    card.querySelector('.name').textContent = rar.name;
+    card.querySelector('.val').textContent = rar.val;
+    $('resTitle').textContent = pk.name + ' 开出:';
+    $('resNote').textContent = '已放入卡册 · 当前拥有 ' + S.cards[rar.key] + ' 张';
+    $('ovResult').classList.add('show');
+    if (ri === 3) sLegend(); else if (ri >= 2) { beep(523,.15); setTimeout(function(){ beep(784,.2); }, 140); } else sCoin();
+  }
+
+  // ---------- 卡册 ----------
+  function openAlbum() {
+    var g = $('albumGrid'); g.innerHTML = '';
+    RARITIES.forEach(function (rar) {
+      var n = S.cards[rar.key];
+      var d = document.createElement('div');
+      d.className = 'card-slot ' + rar.key + (n > 0 ? ' have' : '');
+      d.innerHTML = '<div class="emo">' + (n > 0 ? rar.emo : '❓') + '</div>' +
+        '<div>' + rar.name + '</div><div class="cnt">' + (n > 0 ? '×' + n : '未获得') + '</div>';
+      g.appendChild(d);
+    });
+    show('Album');
+  }
+
+  // ---------- 事件 ----------
+  $('btnStart').onclick = function () { show('Quiz'); nextQ(); };
+  $('btnShop').onclick = openShop;
+  $('btnAlbumStart').onclick = openAlbum;
+  $('btnBackAlbum').onclick = function () { show('Start'); };
+  $('btnCloseShop').onclick = function () { $('ovShop').classList.remove('show'); };
+  $('btnCloseResult').onclick = function () { $('ovResult').classList.remove('show'); };
+  $('ovShop').onclick = function (e) { if (e.target === this) this.classList.remove('show'); };
+  $('ovResult').onclick = function (e) { if (e.target === this) this.classList.remove('show'); };
+
+  render();
+  show('Start');
+})();
+</script>
+</body>
+</html>

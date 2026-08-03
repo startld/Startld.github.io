@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>问卷模拟器 — 极光洞察 Aurora Insights</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: radial-gradient(900px 500px at 85% -5%, #1c3355 0%, transparent 55%),
+                radial-gradient(700px 500px at 5% 15%, #10203f 0%, transparent 50%),
+                #0a1226;
+    color: #eef1ff; overflow: hidden; touch-action: manipulation; user-select: none;
+  }
+  #app { max-width: 560px; margin: 0 auto; height: 100dvh; display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; background: rgba(255,255,255,.05);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: .95rem; }
+  .brand .lg { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(135deg,#4da8ff,#7c5cff); font-size: .85rem; }
+  .coins { display: flex; align-items: center; gap: 6px; font-weight: 800; color: #ffd166; }
+  .icon-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); color: #eef1ff;
+    border-radius: 12px; padding: 8px 12px; font-size: .9rem; cursor: pointer; }
+  .icon-btn:active { transform: scale(.95); }
+
+  .screen { flex: 1; display: none; flex-direction: column; padding: 18px 16px; overflow-y: auto; }
+  .screen.show { display: flex; }
+  .center { justify-content: center; align-items: center; text-align: center; }
+
+  /* 开始屏 */
+  .start .logo { font-size: 3.4rem; margin-bottom: 6px; }
+  .start h1 { font-size: 1.9rem; font-weight: 900; margin-bottom: 4px; }
+  .start .company { font-size: .9rem; color: #9aa3c7; margin-bottom: 18px; }
+  .start .company b { color: #8ec5ff; }
+  .info-box {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 14px; padding: 12px 14px; font-size: .82rem; color: #9aa3c7;
+    text-align: left; margin-bottom: 16px; line-height: 1.7;
+  }
+  .dirs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .dir {
+    padding: 14px 12px; border-radius: 14px; cursor: pointer; text-align: center;
+    background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.12); transition: .15s;
+  }
+  .dir .emo { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+  .dir .nm { font-size: .85rem; font-weight: 700; }
+  .dir.sel { border-color: #4da8ff; background: rgba(77,168,255,.15); }
+  .big-btn { width: 100%; padding: 15px; border: none; border-radius: 999px; font-size: 1.05rem; font-weight: 800;
+    cursor: pointer; color: #05243f; background: linear-gradient(135deg,#4da8ff,#7c5cff);
+    box-shadow: 0 10px 26px rgba(77,168,255,.3); }
+  .big-btn:disabled { opacity: .4; }
+  .big-btn.gold { background: linear-gradient(135deg,#ffd166,#ff9f43); color: #3a2500; box-shadow: 0 10px 26px rgba(255,159,67,.35); }
+  .ghost-btn { width: 100%; padding: 13px; border-radius: 999px; cursor: pointer;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); color: #eef1ff;
+    font-size: .95rem; font-weight: 700; margin-top: 10px; }
+  .aff { margin-top: 14px; font-size: .8rem; color: #6a71a8; }
+  .aff a { color: #8a92c8; }
+
+  /* 问卷屏 */
+  .q-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .q-stage { font-size: .8rem; color: #9aa3c7; }
+  .q-stage b { color: #8ec5ff; }
+  .q-pct { font-size: .8rem; color: #9aa3c7; font-variant-numeric: tabular-nums; }
+  .pbar { height: 10px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; margin-bottom: 16px; }
+  .pbar span { display: block; height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg,#34e08a,#4da8ff); transition: width .35s ease; }
+  .pbar span.screen-phase { background: linear-gradient(90deg,#ffd166,#ff9f43); }
+  .q-card {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 18px; padding: 20px; margin-bottom: 16px;
+  }
+  .q-tag { font-size: .72rem; color: #8ec5ff; background: rgba(77,168,255,.12); padding: 3px 10px;
+    border-radius: 999px; display: inline-block; margin-bottom: 10px; }
+  .q-tag.warn { color: #ffb3b3; background: rgba(255,107,107,.12); }
+  .q-card h2 { font-size: 1.08rem; line-height: 1.5; }
+  .q-sub { font-size: .8rem; color: #6a71a8; margin-top: 6px; }
+  .opts { display: grid; gap: 10px; }
+  .opt {
+    padding: 14px 16px; border-radius: 14px; cursor: pointer; text-align: left;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    color: #eef1ff; font-size: .95rem; font-weight: 600; transition: .12s;
+  }
+  .opt:active { transform: scale(.98); }
+  .opt.pick { background: rgba(77,168,255,.25); border-color: #4da8ff; }
+  .submit-btn { width: 100%; padding: 14px; border: none; border-radius: 999px; margin-top: 12px;
+    font-size: 1rem; font-weight: 800; cursor: pointer; color: #fff;
+    background: linear-gradient(135deg,#34e08a,#4da8ff); }
+  .submit-btn:disabled { opacity: .4; }
+  .rates { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .rate-btn {
+    padding: 14px 0; border-radius: 12px; cursor: pointer; text-align: center; font-size: 1.05rem; font-weight: 800;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); color: #eef1ff;
+  }
+  .rate-btn.pick { background: rgba(255,209,102,.3); border-color: #ffd166; color: #ffd166; }
+
+  /* 结果屏 */
+  .result { text-align: center; }
+  .result .emo { font-size: 4rem; margin-bottom: 10px; }
+  .result h2 { font-size: 1.6rem; margin-bottom: 10px; }
+  .result .reason { color: #9aa3c7; font-size: .92rem; margin-bottom: 16px; line-height: 1.7; }
+  .code-box {
+    display: inline-block; background: #000; border: 2px dashed #ffd166; color: #ffd166;
+    font-family: "Courier New", monospace; font-size: 1.2rem; font-weight: 700;
+    padding: 10px 20px; border-radius: 10px; letter-spacing: 2px; margin: 10px 0 18px;
+  }
+  .gain { font-size: 1.05rem; color: #ffd166; font-weight: 800; margin-bottom: 18px; }
+  .gain small { color: #9aa3c7; font-weight: 400; }
+  .stat-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: .88rem;
+    color: #9aa3c7; border-bottom: 1px dashed rgba(255,255,255,.08); }
+  .stat-line b { color: #eef1ff; }
+
+  /* 弹层(商店/卡册) */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: none; align-items: center;
+    justify-content: center; z-index: 100; padding: 20px; }
+  .overlay.show { display: flex; }
+  .modal { width: 100%; max-width: 400px; background: #141b3a; border: 1px solid rgba(255,255,255,.15);
+    border-radius: 22px; padding: 22px; text-align: center; max-height: 85dvh; overflow-y: auto; }
+  .modal h3 { margin-bottom: 14px; font-size: 1.25rem; }
+  .packs { display: grid; gap: 12px; }
+  .pack { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px;
+    border-radius: 14px; cursor: pointer; text-align: left; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); }
+  .pack:active { transform: scale(.98); }
+  .pack .emo { font-size: 1.8rem; }
+  .pack .info b { display: block; font-size: 1rem; }
+  .pack .info span { font-size: .78rem; color: #9aa3c7; }
+  .pack .price { font-weight: 800; color: #ffd166; white-space: nowrap; }
+  .pack.locked { opacity: .45; }
+  .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .card-slot { aspect-ratio: 3/4; border-radius: 14px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px; text-align: center;
+    background: rgba(255,255,255,.05); border: 1px dashed rgba(255,255,255,.15); color: #6a71a8; font-size: .72rem; padding: 8px; }
+  .card-slot.have { border-style: solid; }
+  .card-slot .emo { font-size: 1.7rem; }
+  .card-slot.common.have { background: rgba(255,255,255,.08); border-color: #9aa3c7; }
+  .card-slot.rare.have { background: rgba(45,140,255,.15); border-color: #2d8cff; }
+  .card-slot.epic.have { background: rgba(168,85,247,.15); border-color: #a855f7; }
+  .card-slot.legend.have { background: rgba(255,209,102,.15); border-color: #ffd166; }
+  .result-card { width: 150px; height: 200px; margin: 16px auto; border-radius: 16px; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; gap: 10px; border: 2px solid; animation: pop .5s ease; }
+  .result-card .emo { font-size: 3rem; }
+  .result-card .name { font-size: 1rem; font-weight: 800; padding: 0 10px; text-align: center; }
+  .result-card .val { font-size: .8rem; opacity: .85; }
+  .result-card.common { border-color: #9aa3c7; background: rgba(154,163,199,.15); color: #c9cff0; }
+  .result-card.rare { border-color: #2d8cff; background: rgba(45,140,255,.15); color: #8ec5ff; }
+  .result-card.epic { border-color: #a855f7; background: rgba(168,85,247,.15); color: #d8b4fe; }
+  .result-card.legend { border-color: #ffd166; background: rgba(255,209,102,.15); color: #ffe9a8;
+    animation: pop .5s ease, glow 1.2s ease infinite alternate; }
+  @keyframes pop { 0% { transform: scale(.3); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
+  @keyframes glow { from { box-shadow: 0 0 10px rgba(255,209,102,.4); } to { box-shadow: 0 0 34px rgba(255,209,102,.9); } }
+  .close-btn { width: 100%; padding: 13px; border-radius: 999px; border: none; cursor: pointer;
+    font-size: 1rem; font-weight: 800; background: linear-gradient(135deg,#7c5cff,#00d4ff); color: #fff; }
+  .note { font-size: .8rem; color: #9aa3c7; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand"><span class="lg">🔍</span> 极光洞察</div>
+    <div class="coins">🪙 <span id="coins">0</span></div>
+    <button class="icon-btn" id="btnShop">🎒 商店</button>
+  </div>
+
+  <!-- 开始屏 -->
+  <div class="screen start center show" id="scrStart">
+    <div class="logo">📋</div>
+    <h1>问卷模拟器</h1>
+    <div class="company">虚构问卷商:<b> 极光洞察 Aurora Insights</b></div>
+    <div class="info-box">
+      ⚠️ <b>模拟真实有偿问卷流程</b><br>
+      · 调查方向由 <b>DeepSeek AI</b> 根据市场热点自动选定<br>
+      · 先答 <b>5 道资格筛选题</b>,不符合条件会被<b>踢出</b><br>
+      · 正式问卷含<b>注意力检测</b>与<b>重复校验题</b>,前后矛盾将被<b>终止</b><br>
+      · 全部通过 → 完成码 + 金币;被踢出 → 安慰奖 😿
+    </div>
+    <div style="font-size:.85rem;color:#9aa3c7;margin-bottom:10px">👇 调查方向由 DeepSeek AI 选定</div>
+    <div id="aiPanel">
+      <button class="big-btn" id="btnStart">🚀 开始调查</button>
+    </div>
+    <div id="aiDeciding" style="display:none">
+      <div class="logo" style="font-size:2rem;margin-bottom:10px">🧠</div>
+      <div style="font-size:.95rem;color:#9aa3c7;margin-bottom:10px" id="aiText">DeepSeek 正在分析市场热点…</div>
+      <div class="pbar" style="width:100%"><span id="aiBar" style="width:0"></span></div>
+    </div>
+    <button class="ghost-btn" id="btnAlbum">🃏 我的卡册</button>
+    <div class="aff">想赚<b>真实</b>奖励?<a href="https://mnb.ee?ar=49446"> 了解 MoonBazaar →</a></div>
+  </div>
+
+  <!-- 问卷屏 -->
+  <div class="screen" id="scrQuiz">
+    <div class="q-head">
+      <span class="q-stage" id="qStage">资格筛选</span>
+      <span class="q-pct" id="qPct">0%</span>
+    </div>
+    <div class="pbar"><span id="pbar"></span></div>
+    <div class="q-card">
+      <span class="q-tag" id="qTag">单选题</span>
+      <h2 id="qText">题目加载中…</h2>
+      <div class="q-sub" id="qSub"></div>
+    </div>
+    <div id="qBody"></div>
+  </div>
+
+  <!-- 被踢出 -->
+  <div class="screen center result" id="scrOut">
+    <div class="emo">😿</div>
+    <h2>很遗憾,您被移出问卷</h2>
+    <div class="reason" id="outReason"></div>
+    <div class="gain" id="outGain"></div>
+    <button class="big-btn gold" id="btnRetry">🔄 换份问卷再来</button>
+    <button class="ghost-btn" id="btnOutHome">返回首页</button>
+  </div>
+
+  <!-- 完成 -->
+  <div class="screen center result" id="scrDone">
+    <div class="emo">🎉</div>
+    <h2>问卷已完成!</h2>
+    <div class="reason">感谢您参与本次调查!请保存您的完成码:</div>
+    <div class="code-box" id="doneCode">MB-XXXX-XXXX</div>
+    <div class="gain" id="doneGain"></div>
+    <div class="stat-line" style="width:100%;max-width:320px"><span>调查主题</span><b id="doneDir">-</b></div>
+    <div class="stat-line" style="width:100%;max-width:320px"><span>完成题数</span><b id="doneQs">-</b></div>
+    <div class="stat-line" style="width:100%;max-width:320px"><span>奖励</span><b id="doneReward">-</b></div>
+    <div style="height:18px"></div>
+    <button class="big-btn" id="btnAgain">📋 再做一份</button>
+    <button class="ghost-btn" id="btnDoneHome">返回首页</button>
+  </div>
+</div>
+
+<!-- 商店 -->
+<div class="overlay" id="ovShop">
+  <div class="modal">
+    <h3>🎒 卡包商店</h3>
+    <div class="packs" id="packs"></div>
+    <div style="height:14px"></div>
+    <button class="close-btn" id="btnCloseShop">关闭</button>
+  </div>
+</div>
+
+<!-- 抽卡结果 -->
+<div class="overlay" id="ovResult">
+  <div class="modal">
+    <h3 id="resTitle">开包结果</h3>
+    <div class="result-card common" id="resCard">
+      <div class="emo">🎮</div><div class="name">CDK 小卡</div><div class="val">≈10 币</div>
+    </div>
+    <div class="note" id="resNote"></div>
+    <button class="close-btn" id="btnCloseResult">好的</button>
+  </div>
+</div>
+
+<!-- 卡册 -->
+<div class="overlay" id="ovAlbum">
+  <div class="modal">
+    <h3>🃏 我的卡册</h3>
+    <div class="album-grid" id="albumGrid"></div>
+    <div style="height:14px"></div>
+    <button class="close-btn" id="btnCloseAlbum">关闭</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ============ 虚构问卷商与调查方向 ============
+  var DIRS = [
+    { key: 'tech', emo: '📱', name: '科技数码', profile: '本次访问面向 18-30 岁男性用户' },
+    { key: 'baby', emo: '🍼', name: '母婴用品', profile: '本次访问面向家中有 3 岁以下婴幼儿的家长' },
+    { key: 'cpg',  emo: '🛒', name: '快消日用', profile: '本次访问面向 18-54 岁家庭采购决策者' },
+    { key: 'food', emo: '🍔', name: '快餐外卖', profile: '本次访问面向 18-40 岁、有外卖习惯的用户' },
+    { key: 'trvl', emo: '✈️', name: '旅游出行', profile: '本次访问面向 22-55 岁、近期有出行计划的用户' },
+    { key: 'game', emo: '🎮', name: '游戏娱乐', profile: '本次访问面向 14-30 岁游戏玩家' }
+  ];
+
+  // ============ 通用筛选题(所有方向) ============
+  var SCREEN_COMMON = [
+    { t: 'single', q: '在过去 7 天内,您是否参与过任何市场调研或问卷访问?', o: ['是', '否'], bad: [0] },
+    { t: 'single', q: '您本人或直系亲属是否在以下行业工作?(市场调研 / 广告 / 公关 / 媒体)', o: ['是', '否'], bad: [0] }
+  ];
+
+  // ============ 各方向专属筛选题(人群画像) ============
+  var SCREEN_BY_DIR = {
+    tech: [
+      { t: 'single', q: '请选择您的年龄段:', o: ['18 岁以下', '18-24 岁', '25-30 岁', '31-40 岁', '41-50 岁', '51 岁及以上'], bad: [0, 3, 4, 5] },
+      { t: 'single', q: '您的性别是?', o: ['男', '女', '其他 / 不愿透露'], bad: [1, 2] },
+      { t: 'single', q: '您目前是否拥有并使用智能手机?', o: ['是', '否'], bad: [1] }
+    ],
+    baby: [
+      { t: 'single', q: '您家中是否有 3 岁以下的婴幼儿?', o: ['是', '否'], bad: [1] },
+      { t: 'single', q: '请选择您的年龄段:', o: ['18 岁以下', '18-24 岁', '25-34 岁', '35-44 岁', '45 岁及以上'], bad: [0, 4] },
+      { t: 'single', q: '您是否为宝宝日常用品的主要购买者?', o: ['是', '否'], bad: [1] }
+    ],
+    cpg: [
+      { t: 'single', q: '请选择您的年龄段:', o: ['18 岁以下', '18-24 岁', '25-34 岁', '35-44 岁', '45-54 岁', '55 岁及以上'], bad: [0, 5] },
+      { t: 'single', q: '您是否是家庭日常采购的主要决策人?', o: ['是', '否'], bad: [1] }
+    ],
+    food: [
+      { t: 'single', q: '请选择您的年龄段:', o: ['18 岁以下', '18-24 岁', '25-30 岁', '31-40 岁', '41 岁及以上'], bad: [0, 4] },
+      { t: 'single', q: '您平均每周点外卖的次数是?', o: ['从不点外卖', '1-2 次', '3-5 次', '6 次以上'], bad: [0] }
+    ],
+    trvl: [
+      { t: 'single', q: '请选择您的年龄段:', o: ['22 岁以下', '22-30 岁', '31-40 岁', '41-55 岁', '56 岁及以上'], bad: [0, 4] },
+      { t: 'single', q: '您未来 6 个月内是否有出行计划?', o: ['是', '否'], bad: [1] },
+      { t: 'single', q: '您的个人月收入约为?', o: ['5,000 以下', '5,000-10,000', '10,000-20,000', '20,000 以上'], bad: [0] }
+    ],
+    game: [
+      { t: 'single', q: '请选择您的年龄段:', o: ['14 岁以下', '14-17 岁', '18-24 岁', '25-30 岁', '31 岁及以上'], bad: [0, 4] },
+      { t: 'single', q: '您平时是否玩手机或电脑游戏?', o: ['是', '否'], bad: [1] }
+    ]
+  };
+
+  // ============ 注意力检测题(融入正式问卷) ============
+  var ATTENTION = [
+    { t: 'single', q: '本题为质量检测:请选择「比较不同意」。', o: ['非常同意', '比较同意', '比较不同意', '非常不同意'], bad: [0, 1, 3], attention: true },
+    { t: 'single', q: '为保证数据质量,请选择「蓝色」。', o: ['红色', '蓝色', '绿色', '黄色'], bad: [0, 2, 3], attention: true }
+  ];
+
+  // ============ 重复题对(一致性检测) ============
+  var CONSISTENCY = [
+    { first: { id: 'c0', t: 'single', q: '您平均每周网购几次?', o: ['基本不网购', '1-2 次', '3-5 次', '6 次以上'] },
+      second: { id: 'c0b', consistOf: 'c0', t: 'single', q: '回想一下,您每周在网上买东西的频率大约是?', o: ['从不在网上买', '每周 1-2 次', '每周 3-5 次', '每周 6 次以上'] } },
+    { first: { id: 'c1', t: 'single', q: '您每周运动的频率是?', o: ['几乎不运动', '1-2 次', '3-4 次', '每天'] },
+      second: { id: 'c1b', consistOf: 'c1', t: 'single', q: '您一周内进行体育锻炼的次数大概是?', o: ['几乎不锻炼', '每周 1-2 次', '每周 3-4 次', '几乎每天'] } },
+    { first: { id: 'c2', t: 'rate', q: '您对当前个人财务状况的满意度如何?(1=很不满意,5=很满意)', o: ['1', '2', '3', '4', '5'] },
+      second: { id: 'c2b', consistOf: 'c2', t: 'rate', q: '总体而言,您对自己目前的收入水平满意吗?(1=非常不满意,5=非常满意)', o: ['1', '2', '3', '4', '5'] } }
+  ];
+
+  // ============ 通用题库 ============
+  var COMMON = [
+    { t: 'single', q: '您的性别是?', o: ['男', '女', '其他 / 不愿透露'] },
+    { t: 'single', q: '您的婚姻状况?', o: ['未婚', '已婚', '离异 / 丧偶', '不愿透露'] },
+    { t: 'single', q: '您的最高学历是?', o: ['高中及以下', '大专', '本科', '硕士及以上'] },
+    { t: 'single', q: '您的个人月收入区间是?', o: ['3,000 以下', '3,000-8,000', '8,001-15,000', '15,001-30,000', '30,000 以上', '不愿透露'] },
+    { t: 'single', q: '您每天上网时长大约是?', o: ['1 小时以内', '1-3 小时', '3-6 小时', '6 小时以上'] },
+    { t: 'multi', q: '您主要使用哪些设备上网?(可多选)', o: ['智能手机', '笔记本电脑', '台式电脑', '平板电脑', '智能手表'] },
+    { t: 'single', q: '您最常用的社交媒体是?', o: ['微信 / 朋友圈', '抖音 / 快手', '微博', '小红书', 'B 站', '其他'] },
+    { t: 'single', q: '您获取新闻资讯的主要渠道是?', o: ['新闻 App', '社交媒体', '门户网站', '电视 / 报纸', '基本不看'] },
+    { t: 'single', q: '过去一个月,您因看到广告而下单的频率是?', o: ['从未', '1-2 次', '3-5 次', '6 次以上'] },
+    { t: 'single', q: '您更信任以下哪种广告形式?', o: ['短视频广告', '图文软文', '直播带货', '明星代言', '都不太信任'] },
+    { t: 'rate', q: '您愿意为环保 / 可持续产品支付更高价格吗?(1=完全不愿意,5=非常愿意)', o: ['1', '2', '3', '4', '5'] },
+    { t: 'single', q: '您每周运动的频率是?', o: ['几乎不运动', '1-2 次', '3-4 次', '每天'] },
+    { t: 'rate', q: '您对健康饮食的关注程度?(1=完全不关注,5=非常关注)', o: ['1', '2', '3', '4', '5'] },
+    { t: 'multi', q: '您最常使用哪些支付方式?(可多选)', o: ['微信支付', '支付宝', '银行卡 / 云闪付', 'Apple Pay / 华为 Pay', '货到付款'] },
+    { t: 'single', q: '您平均每月外卖消费约?', o: ['100 以内', '100-300', '301-600', '600 以上', '从不点外卖'] },
+    { t: 'rate', q: '您对智能家居产品的了解程度?(1=完全不了解,5=非常了解)', o: ['1', '2', '3', '4', '5'] },
+    { t: 'single', q: '您目前使用的手机品牌是?', o: ['苹果', '华为', '小米 / 红米', 'OPPO / vivo', '荣耀', '其他'] },
+    { t: 'single', q: '您是否使用过 AI 助手(如 ChatGPT、豆包等)?', o: ['每天使用', '偶尔使用', '用过几次', '从未用过'] },
+    { t: 'rate', q: '您对 AI 产品的整体态度?(1=非常抵触,5=非常期待)', o: ['1', '2', '3', '4', '5'] },
+    { t: 'single', q: '您购物时最看重哪一点?', o: ['价格', '品质 / 品牌', '配送速度', '售后服务'] },
+    { t: 'single', q: '您最近一次外出旅行是?', o: ['近 3 个月内', '近一年内', '一年以上', '很久没旅行了'] },
+    { t: 'rate', q: '您对"会员订阅制"(如视频会员)的接受度?(1=很反感,5=很乐意)', o: ['1', '2', '3', '4', '5'] },
+    { t: 'single', q: '您通常在哪个时间段网购?', o: ['上午', '下午', '晚上', '深夜', '不定时'] },
+    { t: 'rate', q: '您能接受 App 根据浏览记录做个性化推荐吗?(1=不能接受,5=非常欢迎)', o: ['1', '2', '3', '4', '5'] },
+    { t: 'single', q: '您是否观看过直播带货?', o: ['经常看并购买', '经常看但不买', '偶尔看', '从不看'] },
+    { t: 'single', q: '影响您复购一家店铺的最重要因素是?', o: ['商品质量', '客服态度', '物流速度', '价格优惠'] }
+  ];
+
+  // ============ 各方向特色题库 ============
+  var DIR_QS = {
+    cpg: [
+      { t: 'single', q: '您购买洗发水 / 沐浴露的频率是?', o: ['每月一次', '每 2-3 个月', '半年一次', '不固定'] },
+      { t: 'single', q: '您购买牙膏时更看重?', o: ['品牌', '功效(美白/抗敏)', '价格', '包装'] },
+      { t: 'single', q: '您平时购买零食的习惯是?', o: ['每周都买', '偶尔买', '只在促销时买', '基本不吃'] },
+      { t: 'single', q: '您最常购买的饮料类型是?', o: ['碳酸饮料', '茶饮 / 果汁', '咖啡', '矿泉水', '功能饮料'] },
+      { t: 'rate', q: '您对日用品"囤货"的倾向?(1=用多少买多少,5=喜欢囤货)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'rate', q: '您尝试新品牌新品的意愿?(1=只买熟悉的,5=乐于尝新)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '哪种促销最能打动您?', o: ['第二件半价', '满减券', '买一送一', '积分翻倍'] },
+      { t: 'rate', q: '购买日用品时,您对包装环保性的关注度?(1=不关注,5=很关注)', o: ['1', '2', '3', '4', '5'] }
+    ],
+    tech: [
+      { t: 'single', q: '您每天使用手机 App 的总时长约?', o: ['1 小时以内', '1-3 小时', '3-6 小时', '6 小时以上'] },
+      { t: 'single', q: '您最常使用的 App 类别是?', o: ['社交聊天', '短视频', '购物', '游戏', '工具效率'] },
+      { t: 'single', q: '您卸载一个 App 最常见的原因是?', o: ['占用内存', '广告太多', '功能用不上', '有替代品'] },
+      { t: 'single', q: '您为 App 内购 / 会员付过费吗?', o: ['经常付费', '偶尔', '几乎不', '从不'] },
+      { t: 'rate', q: '您对 App 开屏广告的容忍度?(1=完全不能忍,5=可以接受)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '您对 App 索取通讯录 / 相册权限的态度是?', o: ['一律拒绝', '看情况授权', '基本都同意'] },
+      { t: 'rate', q: '您会向朋友推荐好用的 App 吗?(1=不会,5=经常推荐)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '您最反感哪种 App 行为?', o: ['频繁弹窗', '诱导下载', '偷偷后台运行', '强制实名'] }
+    ],
+    baby: [
+      { t: 'single', q: '您购买婴儿纸尿裤更倾向哪个品牌?', o: ['帮宝适', '花王', '国产平价品牌', '混合购买'] },
+      { t: 'single', q: '您家宝宝目前的喂养方式以什么为主?', o: ['纯母乳', '配方奶粉', '混合喂养', '辅食为主'] },
+      { t: 'single', q: '您平均每月在母婴用品上的花费约?', o: ['500 以内', '500-1,000', '1,001-2,000', '2,000 以上'] },
+      { t: 'single', q: '您最常在哪个渠道购买母婴用品?', o: ['母婴专卖店', '综合电商', '海外代购', '线下商超'] },
+      { t: 'single', q: '您是否使用育儿类 App?', o: ['经常用', '偶尔用', '不用'] },
+      { t: 'single', q: '您挑选婴儿玩具时最看重?', o: ['安全性', '益智性', '品牌', '价格'] },
+      { t: 'single', q: '您购买婴儿辅食(米粉 / 果泥)的频率是?', o: ['每周', '每月', '偶尔', '未购买过'] },
+      { t: 'single', q: '您获取母婴用品信息最信任哪个渠道?', o: ['医生推荐', '宝妈群', '短视频博主', '电商评价'] }
+    ],
+    food: [
+      { t: 'single', q: '您平均每周点几次外卖?', o: ['1-2 次', '3-5 次', '6 次以上', '从不点'] },
+      { t: 'single', q: '您最常点的外卖品类是?', o: ['快餐汉堡', '中餐炒菜', '奶茶甜品', '烧烤炸鸡', '轻食沙拉'] },
+      { t: 'single', q: '您最常用的外卖平台是?', o: ['美团', '饿了么', '抖音团购', '商家自营小程序'] },
+      { t: 'rate', q: '您能接受的外卖配送费上限?(1=3 元以内,5=10 元以上也能接受)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '选择一家餐厅时,您最看重?', o: ['评分', '价格', '配送速度', '包装质量'] },
+      { t: 'rate', q: '您对优惠券的依赖程度?(1=没券就不点,5=无所谓)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '您是否有深夜(22 点后)点外卖的习惯?', o: ['经常', '偶尔', '从不'] },
+      { t: 'rate', q: '您希望外卖平台增加健康餐选项吗?(1=无所谓,5=非常希望)', o: ['1', '2', '3', '4', '5'] }
+    ],
+    trvl: [
+      { t: 'single', q: '您平均每年出游几次?', o: ['1 次以内', '2-3 次', '4 次以上', '基本不出游'] },
+      { t: 'single', q: '您更喜欢哪种旅行方式?', o: ['自由行', '跟团游', '半自由行', '周边自驾'] },
+      { t: 'single', q: '您预订酒店 / 机票最常用?', o: ['携程 / 飞猪', '美团 / 去哪儿', '航空公司官网', '线下门店'] },
+      { t: 'single', q: '您单次旅行的预算通常是?', o: ['2,000 以内', '2,000-5,000', '5,001-10,000', '10,000 以上'] },
+      { t: 'single', q: '您旅行通常和谁同行?', o: ['独自', '伴侣 / 家人', '朋友', '同事'] },
+      { t: 'rate', q: '您会专门去"网红打卡地"吗?(1=完全不会,5=一定会)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '选择酒店时,您最看重?', o: ['位置', '价格', '卫生评价', '早餐 / 设施'] },
+      { t: 'single', q: '您出游会购买旅游保险吗?', o: ['每次都买', '看情况', '从不买'] }
+    ],
+    game: [
+      { t: 'single', q: '您每周玩游戏的时间约?', o: ['基本不玩', '1-5 小时', '6-15 小时', '15 小时以上'] },
+      { t: 'single', q: '您最常在哪个平台玩游戏?', o: ['手机', 'PC', '主机(PS/Switch 等)', '云游戏'] },
+      { t: 'single', q: '您为游戏付过费吗(买断 / 内购)?', o: ['经常', '偶尔', '只买打折', '从不'] },
+      { t: 'rate', q: '您对"开箱 / 抽卡"类付费机制的态度?(1=强烈反感,5=可以接受)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '您最喜欢的游戏类型是?', o: ['MOBA / FPS', '开放世界 RPG', '休闲益智', '模拟经营', '卡牌策略'] },
+      { t: 'single', q: '您更愿意和谁一起玩?', o: ['朋友开黑', '随机路人', '单人独享', '看别人玩(云玩家)'] },
+      { t: 'rate', q: '您能接受游戏内广告吗(换取免费奖励)?(1=不能,5=完全可以)', o: ['1', '2', '3', '4', '5'] },
+      { t: 'single', q: '您从哪了解新游戏?', o: ['应用商店推荐', '主播 / 视频', '朋友安利', '社区论坛'] }
+    ]
+  };
+
+  // ============ 卡片与商店 ============
+  var RARITIES = [
+    { key: 'common', name: 'CDK 小卡', emo: '🎮', val: '≈10 币' },
+    { key: 'rare', name: 'Steam $5 卡', emo: '💙', val: '≈50 币' },
+    { key: 'epic', name: 'iTunes 卡', emo: '💜', val: '≈200 币' },
+    { key: 'legend', name: '白金会员', emo: '👑', val: '≈1000 币' }
+  ];
+  var PACKS = [
+    { name: '青铜包', emo: '📦', price: 100, probs: [0.70, 0.25, 0.05, 0] },
+    { name: '黄金包', emo: '🎁', price: 500, probs: [0.30, 0.45, 0.20, 0.05] },
+    { name: '白金包', emo: '💎', price: 2000, probs: [0.05, 0.25, 0.45, 0.25] }
+  ];
+
+  // ============ 状态 ============
+  var S = { coins: 0, cards: { common: 0, rare: 0, epic: 0, legend: 0 }, done: 0, out: 0 };
+  try { var saved = JSON.parse(localStorage.getItem('mb_survey_save') || 'null'); if (saved) S = Object.assign(S, saved); } catch (e) {}
+  function save() { try { localStorage.setItem('mb_survey_save', JSON.stringify(S)); } catch (e) {} }
+
+  var selDir = null;
+  var queue = [], qi = 0, TOTAL = 0;
+  var screenedOut = false, attentionFail = false, picked = [];
+
+  // ============ DOM ============
+  var $ = function (id) { return document.getElementById(id); };
+  var scrStart = $('scrStart'), scrQuiz = $('scrQuiz'), scrOut = $('scrOut'), scrDone = $('scrDone');
+  var elCoins = $('coins'), elQStage = $('qStage'), elQPct = $('qPct'), elPBar = $('pbar'),
+      elQTag = $('qTag'), elQText = $('qText'), elQSub = $('qSub'), elQBody = $('qBody');
+
+  // ============ 音效 ============
+  var AC = null;
+  function beep(f, d, type, vol) {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      var o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'sine'; o.frequency.value = f;
+      g.gain.value = vol || 0.12;
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + d);
+      o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d);
+    } catch (e) {}
+  }
+  function sCoin() { beep(1200, .08, 'square', .07); }
+  function sBad() { beep(180, .35, 'sawtooth'); }
+  function sDone() { [523, 659, 784].forEach(function (f, i) { setTimeout(function () { beep(f, .18); }, i * 130); }); }
+  function sLegend() { [523, 659, 784, 1047].forEach(function (f, i) { setTimeout(function () { beep(f, .2); }, i * 120); }); }
+
+  // ============ 工具 ============
+  function shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function render() { elCoins.textContent = S.coins; }
+  function show(id) {
+    [scrStart, scrQuiz, scrOut, scrDone].forEach(function (s) { s.classList.remove('show'); });
+    $('scr' + id).classList.add('show');
+  }
+
+  // ============ 组卷 ============
+  var answers = {};
+  var screenTotal = 5;
+  function buildQueue() {
+    var pool = COMMON.concat(DIR_QS[selDir.key]);
+    var main = shuffle(pool).slice(0, 28);
+    // 混入 2 道注意力检测题
+    main[7] = ATTENTION[0];
+    main[19] = ATTENTION[1];
+    // 插入重复题对:前段问 first,后段问 second,用于一致性校验
+    main[6] = CONSISTENCY[0].first;
+    main[10] = CONSISTENCY[1].first;
+    main[14] = CONSISTENCY[2].first;
+    main[22] = CONSISTENCY[0].second;
+    main[24] = CONSISTENCY[2].second;
+    main[26] = CONSISTENCY[1].second;
+    screenTotal = SCREEN_COMMON.length + SCREEN_BY_DIR[selDir.key].length;
+    queue = SCREEN_COMMON.concat(SCREEN_BY_DIR[selDir.key], main);
+    TOTAL = queue.length;
+    qi = 0; answers = {};
+  }
+
+  // ============ 渲染题目 ============
+  function qTypeName(t) {
+    return { single: '单选题', multi: '多选题', rate: '评分题' }[t] || '单选题';
+  }
+  function renderQ() {
+    var q = queue[qi];
+    var phase = qi < screenTotal;
+    elQStage.innerHTML = phase ? '🧪 资格筛选 <b>' + (qi + 1) + '/' + screenTotal + '</b>' :
+      '📋 正式问卷 <b>' + (qi - screenTotal + 1) + '/' + (TOTAL - screenTotal) + '</b>';
+    elQPct.textContent = Math.round((qi / TOTAL) * 100) + '%';
+    elPBar.style.width = ((qi + 0.5) / TOTAL * 100) + '%';
+    elPBar.className = phase ? 'screen-phase' : '';
+    elQTag.textContent = q.attention ? '⚠️ 注意力检测' : (phase ? '筛选问题' : qTypeName(q.t));
+    elQTag.className = 'q-tag' + (q.attention ? ' warn' : '');
+    elQText.textContent = q.q;
+    elQSub.textContent = q.t === 'multi' ? '(可多选,选择后请点击"提交答案")' :
+      (q.t === 'rate' ? '(请根据真实感受选择)' : '');
+    elQBody.innerHTML = '';
+    picked = [];
+
+    if (q.t === 'rate') {
+      var rw = document.createElement('div'); rw.className = 'rates';
+      q.o.forEach(function (label, i) {
+        var b = document.createElement('button');
+        b.className = 'rate-btn'; b.textContent = label;
+        b.onclick = function () { ratePick(i); };
+        rw.appendChild(b);
+      });
+      elQBody.appendChild(rw);
+    } else if (q.t === 'multi') {
+      q.o.forEach(function (op, i) {
+        var b = document.createElement('button');
+        b.className = 'opt'; b.textContent = op;
+        b.onclick = function () { multiToggle(i, b); };
+        elQBody.appendChild(b);
+      });
+      var sb = document.createElement('button');
+      sb.className = 'submit-btn'; sb.id = 'submitMulti'; sb.textContent = '✅ 提交答案'; sb.disabled = true;
+      sb.onclick = submitMulti;
+      elQBody.appendChild(sb);
+    } else {
+      q.o.forEach(function (op, i) {
+        var b = document.createElement('button');
+        b.className = 'opt'; b.textContent = op;
+        b.onclick = function () { singlePick(i); };
+        elQBody.appendChild(b);
+      });
+    }
+  }
+  function ratePick(i) {
+    var btns = elQBody.querySelectorAll('.rate-btn');
+    btns.forEach(function (b, j) { b.classList.toggle('pick', j === i); });
+    var q = queue[qi];
+    // 评分类重复题:允许 ±1 分波动,超出即视为不一致
+    if (q.id) {
+      if (q.consistOf) {
+        if (answers[q.consistOf] !== undefined && Math.abs(answers[q.consistOf] - i) > 1) {
+          kicked('检测到您的回答前后不一致,为保证数据质量,本次调查已终止。感谢您的参与!');
+          return;
+        }
+      } else {
+        answers[q.id] = i;
+      }
+    }
+    setTimeout(function () { advance(false); }, 250);
+  }
+  function multiToggle(i, btn) {
+    var idx = picked.indexOf(i);
+    if (idx >= 0) { picked.splice(idx, 1); btn.classList.remove('pick'); }
+    else { picked.push(i); btn.classList.add('pick'); }
+    $('submitMulti').disabled = picked.length === 0;
+  }
+  function submitMulti() {
+    var q = queue[qi];
+    if (q.bad && picked.some(function (i) { return q.bad.indexOf(i) >= 0; })) {
+      kicked('您的设备条件不符合本次调查要求。感谢您的时间!');
+      return;
+    }
+    advance(false);
+  }
+  function singlePick(i) {
+    var q = queue[qi];
+    var btns = elQBody.querySelectorAll('.opt');
+    btns.forEach(function (b) { b.disabled = true; });
+    btns[i].classList.add('pick');
+    if (q.bad && q.bad.indexOf(i) >= 0) {
+      if (q.attention) kicked('您未能通过问卷质量检测。感谢您的时间!');
+      else if (qi < screenTotal) kicked('您不符合本次调查的资格条件。感谢您的时间!');
+      else kicked('您的回答不符合本次调查条件。感谢您的时间!');
+      return;
+    }
+    // 重复题一致性校验
+    if (q.id) {
+      if (q.consistOf) {
+        if (answers[q.consistOf] !== undefined && answers[q.consistOf] !== i) {
+          kicked('检测到您的回答前后不一致,为保证数据质量,本次调查已终止。感谢您的参与!');
+          return;
+        }
+      } else {
+        answers[q.id] = i;
+      }
+    }
+    setTimeout(function () { advance(true); }, 220);
+  }
+
+  // ============ 进度与结束 ============
+  function advance(ok) {
+    qi++;
+    if (qi >= TOTAL) { finish(); return; }
+    renderQ();
+  }
+  function kicked(reason) {
+    beep(180, .35, 'sawtooth');
+    S.out++; S.coins += 5;
+    save(); render();
+    var hint = (qi < screenTotal && selDir && selDir.profile)
+      ? '<br><small style="color:#6a71a8">' + selDir.profile + '</small>' : '';
+    $('outReason').innerHTML = reason + hint;
+    $('outGain').innerHTML = '💧 安慰奖励:<b> +5 🪙</b><br><small>您已被移出问卷,可换一份问卷重新尝试</small>';
+    show('Out');
+  }
+  function finish() {
+    sDone();
+    var bonus = Math.floor(Math.random() * 51);
+    var reward = 350 + bonus;
+    S.coins += reward; S.done++;
+    save(); render();
+    $('doneDir').textContent = '2026 消费者生活方式综合调研';
+    $('doneQs').textContent = TOTAL + ' 题';
+    $('doneReward').textContent = '+' + reward + ' 🪙 (含 ' + bonus + ' 随机加成)';
+    var code = 'MB-' + Math.random().toString(36).slice(2, 6).toUpperCase() + '-' +
+               Math.random().toString(36).slice(2, 6).toUpperCase();
+    $('doneCode').textContent = code;
+    $('doneGain').innerHTML = '💰 奖励已到账:<b> +' + reward + ' 🪙</b>';
+    show('Done');
+  }
+
+  // ============ 开始屏:DeepSeek 智能选定方向 ============
+  function aiPickDir() {
+    var done = {};
+    try { done = JSON.parse(localStorage.getItem('mb_dirs_done') || '{}'); } catch (e) {}
+    var fresh = DIRS.filter(function (d) { return !done[d.key]; });
+    var pool = fresh.length ? fresh : DIRS; // 优先选没做过的方向
+    var d = pool[Math.floor(Math.random() * pool.length)];
+    done[d.key] = (done[d.key] || 0) + 1;
+    try { localStorage.setItem('mb_dirs_done', JSON.stringify(done)); } catch (e) {}
+    return d;
+  }
+  function aiDecide() {
+    $('aiPanel').style.display = 'none';
+    $('aiDeciding').style.display = 'block';
+    var texts = ['DeepSeek 正在分析市场热点…', '正在筛选目标人群画像…', '正在匹配最佳调查主题…'];
+    var ti = 0, w = 0;
+    var iv = setInterval(function () { $('aiText').textContent = texts[ti++ % texts.length]; }, 450);
+    var wiv = setInterval(function () { w = Math.min(100, w + 7); $('aiBar').style.width = w + '%'; }, 90);
+    setTimeout(function () {
+      clearInterval(iv); clearInterval(wiv);
+      selDir = aiPickDir();
+      $('aiText').textContent = '问卷已生成,请如实作答…';
+      setTimeout(function () {
+        $('aiPanel').style.display = '';
+        $('aiDeciding').style.display = 'none';
+        buildQueue();
+        show('Quiz');
+        renderQ();
+      }, 900);
+    }, 1500);
+  }
+
+  // ============ 商店 / 抽卡 / 卡册 ============
+  function openShop() {
+    var p = $('packs'); p.innerHTML = '';
+    PACKS.forEach(function (pk, i) {
+      var d = document.createElement('div');
+      d.className = 'pack' + (S.coins < pk.price ? ' locked' : '');
+      d.innerHTML = '<span class="emo">' + pk.emo + '</span><div class="info"><b>' + pk.name + '</b><span>' +
+        ['大概率普通卡', '稀有卡概率高', '传说卡概率高'][i] + '</span></div><span class="price">' + pk.price + ' 🪙</span>';
+      d.onclick = function () { openPack(i); };
+      p.appendChild(d);
+    });
+    $('ovShop').classList.add('show');
+  }
+  function openPack(i) {
+    var pk = PACKS[i];
+    if (S.coins < pk.price) { beep(150, .2, 'sawtooth'); return; }
+    S.coins -= pk.price; save(); render();
+    var r = Math.random(), acc = 0, ri = 0;
+    for (var k = 0; k < pk.probs.length; k++) { acc += pk.probs[k]; if (r < acc) { ri = k; break; } }
+    var rar = RARITIES[ri];
+    S.cards[rar.key]++; save();
+    $('ovShop').classList.remove('show');
+    var card = $('resCard');
+    card.className = 'result-card ' + rar.key;
+    card.querySelector('.emo').textContent = rar.emo;
+    card.querySelector('.name').textContent = rar.name;
+    card.querySelector('.val').textContent = rar.val;
+    $('resTitle').textContent = pk.name + ' 开出:';
+    $('resNote').textContent = '已放入卡册 · 当前拥有 ' + S.cards[rar.key] + ' 张';
+    $('ovResult').classList.add('show');
+    if (ri === 3) sLegend(); else sCoin();
+  }
+  function openAlbum() {
+    var g = $('albumGrid'); g.innerHTML = '';
+    RARITIES.forEach(function (rar) {
+      var n = S.cards[rar.key];
+      var d = document.createElement('div');
+      d.className = 'card-slot ' + rar.key + (n > 0 ? ' have' : '');
+      d.innerHTML = '<div class="emo">' + (n > 0 ? rar.emo : '❓') + '</div><div>' + rar.name + '</div><div class="cnt">' + (n > 0 ? '×' + n : '未获得') + '</div>';
+      g.appendChild(d);
+    });
+    $('ovAlbum').classList.add('show');
+  }
+
+  // ============ 事件绑定 ============
+  $('btnStart').onclick = aiDecide;
+  $('btnRetry').onclick = function () { show('Start'); };
+  $('btnOutHome').onclick = function () { show('Start'); };
+  $('btnAgain').onclick = function () { show('Start'); };
+  $('btnDoneHome').onclick = function () { show('Start'); };
+  $('btnShop').onclick = openShop;
+  $('btnAlbum').onclick = openAlbum;
+  $('btnCloseShop').onclick = function () { $('ovShop').classList.remove('show'); };
+  $('btnCloseResult').onclick = function () { $('ovResult').classList.remove('show'); };
+  $('btnCloseAlbum').onclick = function () { $('ovAlbum').classList.remove('show'); };
+  ['ovShop', 'ovResult', 'ovAlbum'].forEach(function (id) {
+    $(id).onclick = function (e) { if (e.target === this) this.classList.remove('show'); };
+  });
+
+  render();
+  show('Start');
+})();
+</script>
+</body>
+</html>
