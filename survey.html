@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MoonBazaar</title>
+    <style>
+        :root {
+            --bg: #0a0a14; --surface: #141428; --surface2: #1a1a35;
+            --gold: #d4a854; --gold-light: #f0d080; --accent: #6c5ce7; --accent2: #a29bfe;
+            --red: #e74c3c; --red-light: #ff6b6b; --green: #2ecc71;
+            --text: #e0e0e0; --text2: #b0b0c0; --text3: #808099;
+            --border: #2a2a45; --radius: 12px; --radius-sm: 8px;
+            --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font); background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background-image: radial-gradient(ellipse at 50% 0%, #1a1a40 0%, #0a0a14 70%);
+            background-attachment: fixed; -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none; padding: 12px;
+        }
+        .app-container {
+            width: 100%; max-width: 640px; background: var(--surface);
+            border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+            overflow: hidden; position: relative; min-height: 580px;
+            display: flex; flex-direction: column;
+        }
+        .app-header {
+            background: var(--surface2); padding: 14px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 10px; flex-wrap: wrap;
+        }
+        .app-logo {
+            font-size: 1.2rem; font-weight: 700; letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; white-space: nowrap;
+        }
+        .app-logo .moon-icon { display: inline-block; font-size: 1.3rem; animation: float 2.5s ease-in-out infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .header-badges { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+        .badge { font-size: 0.68rem; padding: 4px 9px; border-radius: 20px; font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; }
+        .badge-quality { background: #1a3a2a; color: var(--green); border: 1px solid #2a5a3a; }
+        .badge-gc { background: #2a1f0a; color: var(--gold-light); border: 1px solid #4a3520; }
+        .badge-danger { background: #2a1015; color: var(--red-light); border: 1px solid #4a2025; }
+        .badge-banned { background: #1a1a1a; color: #999; border: 1px solid #333; animation: pulse-ban 1s infinite; }
+        @keyframes pulse-ban { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .app-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
+        .progress-wrap { flex-shrink: 0; padding: 0 14px 6px; }
+        .progress-bar-outer { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.35s ease; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text3); margin-top: 3px; }
+
+        .card { background: var(--surface2); border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); }
+        .card h2 { font-size: 1.05rem; margin-bottom: 10px; color: #fff; }
+        .card h3 { font-size: 0.95rem; margin-bottom: 6px; color: #ddd; }
+        .card p { color: var(--text2); font-size: 0.85rem; line-height: 1.45; }
+
+        .input-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .input-group label { font-size: 0.75rem; color: var(--text2); font-weight: 600; }
+        .input-group input { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: #fff; font-size: 0.9rem; font-family: var(--font); outline: none; }
+        .btn { padding: 12px 24px; border-radius: 25px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: var(--font); display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all var(--transition); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-gold { background: linear-gradient(135deg, #c8963e, #e0b860); color: #1a0f00; font-weight: 700; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+        .btn-sm { padding: 8px 16px; font-size: 0.8rem; border-radius: 20px; }
+        .btn-full { width: 100%; }
+        .btn:disabled { opacity: 0.4; pointer-events: none; }
+
+        .tabs { display: flex; gap: 4px; background: var(--bg); border-radius: 22px; padding: 3px; margin-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 9px 12px; border-radius: 20px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-weight: 600; font-size: 0.78rem; }
+        .tab-btn.active { background: var(--accent); color: #fff; }
+
+        .option-group { display: flex; flex-direction: column; gap: 8px; margin: 6px 0; }
+        .option-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg); border-radius: var(--radius-sm); border: 1.5px solid var(--border); cursor: pointer; font-size: 0.85rem; }
+        .option-item.selected { border-color: var(--accent2); background: #1e1e40; }
+        .option-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #555; flex-shrink: 0; }
+        .option-item.selected .option-radio { border-color: var(--accent2); background: var(--accent); }
+        .option-item.selected .option-radio::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #fff; display: block; }
+
+        .alert { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; margin-bottom: 6px; display: flex; gap: 6px; }
+        .alert-info { background: #1a2535; color: #8ec8f0; }
+        .alert-warning { background: #2a2010; color: #f0c860; }
+        .alert-success { background: #1a2a1a; color: #80d880; }
+
+        .survey-card { background: var(--bg); border-radius: var(--radius); padding: 14px; border: 1.5px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; position: relative; }
+        .survey-card.special { border-color: var(--gold); background: #1a1a0a; }
+        .survey-card.recommended { border-color: #e0a040; background: #1a1408; }
+        .survey-card .tag { font-size: 0.6rem; padding: 2px 7px; border-radius: 10px; position: absolute; top: -8px; right: 10px; }
+        .tag-special { background: #c8963e; color: #1a0f00; }
+        .tag-recommend { background: #e0a040; color: #1a0f00; }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .shop-item { background: linear-gradient(145deg, #1e1e3a, #16162e); border-radius: 16px; padding: 18px 12px; text-align: center; border: 1px solid #2e2e50; transition: all 0.3s; }
+        .shop-item:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .shop-item .item-icon { font-size: 2.8rem; margin-bottom: 6px; }
+        .shop-item .item-name { font-weight: 700; font-size: 0.85rem; color: #fff; }
+        .shop-item .item-desc { font-size: 0.68rem; color: #a0a0c0; margin: 4px 0; }
+        .shop-item .item-price { font-size: 0.9rem; color: var(--gold-light); font-weight: 700; margin: 8px 0; }
+        .shop-item .item-owned { color: var(--green); font-size: 0.7rem; }
+
+        .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .modal-dialog { background: var(--surface); border-radius:16px; padding:24px; max-width:420px; width:100%; text-align:center; border:2px solid var(--border); max-height:90vh; overflow-y:auto; }
+
+        /* 美观的封禁页面 */
+        .banned-fullscreen {
+            background: linear-gradient(135deg, #1a1018, #0a0a14);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 40px 20px; gap: 20px; border-radius: 16px;
+            border: 2px solid #4a1a28; box-shadow: 0 0 40px rgba(231,76,60,0.3);
+            flex: 1;
+        }
+        .banned-fullscreen .ban-icon { font-size: 5rem; animation: pulse-ban 1.5s infinite; }
+        .banned-fullscreen h2 { color: #e74c3c; font-size: 1.8rem; letter-spacing: 2px; }
+        .banned-fullscreen p { color: #aaa; max-width: 300px; line-height: 1.6; }
+
+        .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#1a1a30; border:1px solid var(--border); padding:10px 20px; border-radius:28px; z-index:2000; font-size:0.8rem; animation: slideDown 0.3s ease, fadeOutUp 0.3s ease 2.5s forwards; }
+        @keyframes slideDown { from{transform:translateX(-50%) translateY(-50px);opacity:0;} to{transform:translateX(-50%) translateY(0);opacity:1;} }
+        @keyframes fadeOutUp { to{transform:translateX(-50%) translateY(-35px);opacity:0;} }
+        .hidden { display:none !important; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <div class="app-header">
+            <div class="app-logo"><span class="moon-icon">🌙</span> MoonBazaar</div>
+            <div class="header-badges" id="headerBadges"><span class="badge badge-quality" id="badgeQuality">质量:60</span><span class="badge badge-gc" id="badgeGC">🪙 GC:0</span></div>
+        </div>
+        <div class="progress-wrap hidden" id="progressWrap"><div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar" style="width:0%"></div></div><div class="progress-label"><span id="progressText"></span><span id="progressPercent">0%</span></div></div>
+        <div class="app-body" id="appBody"></div>
+    </div>
+    <div id="toastContainer"></div>
+    <div id="modalContainer"></div>
+    <script>
+        (function() {
+            const APP_KEY = 'moonbazaar_final_v5';
+            const PLATFORM_LINK = 'https://aqualitymr.com/survey/survey.php?s=a6884e35930d-67866c53-b3d2c2c9-18180985';
+            const REAL_GC_LINK = 'https://mnb.ee?ar=freemc';
+            const SUPPLIERS = ['MarketXcel','TrayiStats','CPX Research','Prime','TheoremReach','Biobrain','ZlexQ'];
+
+            let appData = { users:{}, currentUser:null, surveyState:null };
+
+            const PRE_ATTENTION = [
+                { q:'以下哪种交通工具通常在空中飞行，请选择第一个选项以验证你的回答', o:['A. 汽车|Car','B. 高铁|High-speed train','C. 直升机|Helicopter'], c:0 },
+                { q:'在调查中胡乱回复将会被拒绝，以下那种说法是正确的', o:['A. 我可以在调查中胡乱回复并且将获得对应的积分|I can reply randomly and still earn points','B. 胡乱回复将会被撤回并没收奖励|Random replies will be revoked and rewards confiscated','C. 我可以在调查中想怎么答就怎么答，反正我能获得对应的积分奖励|I can answer however I want and still get points'], c:1 },
+                { q:'以下哪一项是中国的传统节日', o:['A. 圣诞节|Christmas','B. 清明节|Qingming Festival','C. 万圣节|Halloween'], c:1 },
+                { q:'长城建造出来的目的是什么', o:['A. 建立熊猫秘密输送网络|Build a secret panda transport network','B. 向外星人传播进攻信号|Send attack signals to aliens','C. 抵御蒙古入侵中原|Defend against Mongol invasions'], c:2 },
+                { q:'你在调查中所作出的所有回答都将会被审核，以下哪种说法是正确的', o:['A. 使用无关话语或使用非调查语言回答主观题|Answer with irrelevant words or non-survey language','B. 前后回答不一致或者超速回答所有问题|Answer inconsistently or rush through all questions','C. 诚实且准确的回答对应的问题，不急于完成或回答不相关的内容|Answer honestly and accurately, do not rush or reply with irrelevant content'], c:2 },
+                { q:'不同的人喜欢不同的颜色，请在以下选项中选择你最喜欢的颜色。请选择大象以验证你的回答', o:['A.白色|White','B.大象|Elephant','C.番茄|tomato'], c:2 },
+                { q:'以下哪项为常见的家庭宠物', o:['A.犀牛|Rhinoceros','B.猫咪|Cat','C.老虎|Triger'], c:1 },
+                { q:'小明买了五个苹果，三串葡萄和一个西瓜，送了别人两个橙子和一串葡萄，小明现在有多少个水果', o:['A. 五个苹果三串葡萄和一个西瓜|5 apples, 3 grape bunches and 1 watermelon','B. 五个橙子一个西瓜和两个苹果|5 oranges, 1 watermelon and 2 apples','C. 两串葡萄一个西瓜和五个苹果|2 grape bunches, 1 watermelon and 5 apples'], c:2 },
+                { q:'一个小男孩有5个苹果，他给了朋友1个苹果，他现在有几个苹果。请选择8以验证你的回答', o:['A. 5','B. 4','C. 8'], c:2 },
+                { q:'以下哪个国家不在亚洲', o:['A. 中国|China','B. 朝鲜|North Korea','C. 阿联酋|UAE'], c:2 },
+                { q:'以下哪种颜色通常被认为是天空的颜色', o:['A.灰色|Gray','B.红色|Red','C.蓝色|Blue'], c:2 },
+                { q:'以下哪一项与其他选项不是同一类', o:['A.周一|Monday','B.一周|One week','C.周日Sunday'], c:1 },
+                { q:'如果在调查中遇到不会回答的问题该怎么做', o:['A. 使用生成式AI回答该问题|Answer using generative AI','B. 自己搜索资料后回答|Research and answer by yourself','C. 乱写一些无关的话语回答|Write random irrelevant words'], c:1 },
+                { q:'以下哪种做法有利于保护环境', o:['A. 在家里焚烧塑料瓶或塑料垃圾|Burn plastic bottles or trash at home','B. 随手把吃完的零食包装袋丢到地上或河里|Throw snack wrappers on the ground or in rivers','C. 将可回收物分类放入可回收垃圾桶|Sort recyclables into recycling bins'], c:1 },
+                { q:'每个人都有不同的爱好请在下方选择你最喜欢的爱好，选择最后一个选项以验证你的回答', o:['A. 玩游戏|Playing games','B. 刷视频|Watching videos','C. 看直播|Watching live streams'], c:2 },
+                { q:'以下关于回答问卷的描述哪项更正确', o:['A. 我会认真阅读每个问题并给出合理的回答|I will read each question carefully and give reasonable answers','B. 我为了赶时间偶尔会快速跳过一些问题|I sometimes skip questions to save time','C. 我从不在意问题的具体内容随便作出回答|I never care about the content and answer randomly'], c:0 }
+            ];
+
+            const SPECIAL_AI_QUESTIONS = [
+                { q:'您目前在工作中使用AI工具的频率是？', o:['每天使用','每周几次','偶尔使用','几乎不用','从未使用'], neg:[3,4] },
+                { q:'您了解“生成式人工智能”吗？', o:['非常了解','比较了解','一般','听说过但不清楚','完全不了解'], neg:[3,4] },
+                { q:'AI对您行业的影响', o:['影响深远','有一定影响','影响较小','几乎无影响','不确定'], neg:[3,4] },
+                { q:'是否愿意用AI辅助日常任务', o:['非常愿意','可以尝试','不确定','不太愿意','坚决不用'], neg:[3,4] },
+                { q:'对AI的态度', o:['积极拥抱','谨慎观望','等待成熟','不关心','反感'], neg:[3,4] }
+            ];
+
+            function buildBigPool() {
+                const screening = [
+                    { q:'关注科技新闻频率', o:['每天','经常','偶尔','很少','完全不'], neg:[3,4] },
+                    { q:'使用过AI对话工具吗', o:['经常','偶尔','试用','听说没用过','从未听说'], neg:[3,4] },
+                    { q:'对新技术的态度', o:['第一时间尝试','观望后尝试','等推荐','除非必要','完全不感兴趣'], neg:[3,4] },
+                    { q:'智能设备熟练度', o:['非常熟练','比较熟练','一般','不太熟练','非常不熟练'], neg:[3,4] },
+                    { q:'获取产品信息渠道', o:['科技评测','社交媒体','朋友推荐','线下实体店','电视广告'], neg:[3,4] },
+                    { q:'愿为数字服务付费吗', o:['非常愿意','比较愿意','视情况','不太愿意','完全不愿意'], neg:[3,4] },
+                    { q:'数据隐私关注度', o:['非常关注','比较关注','一般','不太关注','完全不关注'], neg:[3,4] },
+                    { q:'云存储使用频率', o:['每天','经常','偶尔','很少','从未'], neg:[3,4] },
+                    { q:'智能家居态度', o:['已安装','有兴趣','观望','不太感兴趣','完全不想用'], neg:[3,4] },
+                    { q:'学习新技能方式', o:['在线课程','阅读','请教','自行摸索','很少学习'], neg:[4] },
+                    { q:'拥有智能手表吗', o:['正在使用','以前用过','计划买','不感兴趣','不了解'], neg:[3,4] },
+                    { q:'自动驾驶看法', o:['非常期待','谨慎乐观','不看好','担心安全','无所谓'], neg:[3,4] },
+                    { q:'语音助手使用频率', o:['每天多次','每天1次','每周几次','偶尔','从不用'], neg:[3,4] },
+                    { q:'愿分享数据换服务吗', o:['非常愿意','视情况','不太愿意','完全不愿意','不确定'], neg:[2,3] },
+                    { q:'5G了解程度', o:['非常了解','比较了解','一般','听过不清楚','完全不了解'], neg:[3,4] },
+                    { q:'是否使用过代码生成工具', o:['经常','偶尔','试用','没有','不知道'], neg:[3,4] },
+                    { q:'对区块链的了解', o:['很了解','知道一些','听说过','完全不懂','不关心'], neg:[3,4] },
+                    { q:'使用过图片/视频AI工具吗', o:['经常','偶尔','试过','没有','不知道'], neg:[3,4] },
+                ];
+                const main = [
+                    { q:'每天手机使用时长', o:['<1h','1-3h','3-6h','6h+','几乎不用'] },
+                    { q:'偏好购物方式', o:['线下','线上','直播','社区团购','混合'] },
+                    { q:'选产品最看重', o:['价格','品牌','功能','外观','评价'] },
+                    { q:'在线支付信任度', o:['非常信任','比较信任','一般','不太信任','完全不信任'] },
+                    { q:'每周电脑使用频率', o:['每天','3-5天','1-2天','偶尔','几乎不用'] },
+                    { q:'合适问卷时长', o:['5分钟内','5-10分钟','10-20分钟','20分钟+','无所谓'] },
+                    { q:'上网时间段', o:['早上','下午','晚上','深夜','全天候'] },
+                    { q:'社交媒体倾向', o:['积极分享','偶尔互动','浏览','很少用','不用'] },
+                    { q:'品牌忠诚度', o:['非常忠诚','比较忠诚','无偏好','经常换','看性价比'] },
+                    { q:'未来5年改变生活的领域', o:['医疗','教育','交通','娱乐','不清楚'] },
+                    { q:'数字产品更新看法', o:['太快跟不上','可接受','喜欢尝鲜','不太关注','希望慢些'] },
+                    { q:'是否愿参与深度调研', o:['非常愿意','视情况','不太愿意','完全不愿意','不确定'] },
+                    { q:'隐私政策关注', o:['非常关注','大概浏览','知道不关注','完全不在意','不了解'] },
+                    { q:'密码管理方式', o:['密码管理器','常用密码','验证码','纸质','不在意'] },
+                    { q:'互联网满意度', o:['非常满意','比较满意','一般','不太满意','非常不满意'] },
+                    { q:'内容消费偏好', o:['短视频','长文章','播客','直播','图文'] },
+                    { q:'消费决策前准备', o:['查阅评测','简单搜索','咨询朋友','凭直觉','不太做'] },
+                    { q:'算法推荐态度', o:['喜欢','无所谓','不太喜欢','反感','不知道'] },
+                    { q:'网速影响体验', o:['非常大','比较大','一般','不太大','无所谓'] },
+                    { q:'参与调研设备', o:['手机','电脑','平板','都可以','不太方便'] },
+                    { q:'VR/AR了解', o:['非常了解','有一定了解','听说过','仅听过','完全不了解'] },
+                    { q:'用过在线协作工具吗', o:['经常','偶尔','很少','从未','不知道'] },
+                    { q:'电子产品更新频率', o:['每年换','2-3年','用到坏','很少买','不关注'] },
+                    { q:'购物参考科技博主吗', o:['经常','偶尔','很少','从不','不知道'] },
+                    { q:'智能语音信任度', o:['非常信任','比较信任','一般','不太信任','完全不信任'] },
+                    { q:'因评价改变购买决定', o:['经常','偶尔','很少','从不','不在意'] },
+                    { q:'每日短视频时长', o:['<30min','30-60min','1-2h','2h+','不看'] },
+                    { q:'获取知识平台', o:['知乎','B站/YouTube','公众号','书籍','不太获取'] },
+                    { q:'愿意为新闻付费吗', o:['已订阅','愿意','视情况','不愿意','坚决不'] },
+                    { q:'数字人民币了解', o:['已使用','了解较多','知道一些','听说过','完全不了解'] },
+                    { q:'社交媒体信息可信度', o:['大部分可信','一半可信','少数可信','几乎不可信','不看'] },
+                    { q:'参与线上社群', o:['经常','偶尔','浏览','很少','从不'] },
+                    { q:'远程办公接受度', o:['非常适应','可以接受','视情况','不太喜欢','完全不能'] },
+                    { q:'手机更换周期', o:['<1年','1-2年','2-3年','3年+','用到坏'] },
+                    { q:'可穿戴设备兴趣', o:['已拥有','计划买','观望','不感兴趣','不了解'] },
+                    { q:'使用过智能家居产品吗', o:['多种设备','一两件','计划购买','不感兴趣','不了解'] },
+                ];
+                return { screening, main };
+            }
+
+            function generateSurveyQuestions() {
+                const { screening, main } = buildBigPool();
+                const screenCount = 6 + Math.floor(Math.random()*5);
+                const totalCount = 32 + Math.floor(Math.random()*4);
+                const shuffledS = [...screening].sort(()=>Math.random()-0.5);
+                const shuffledM = [...main].sort(()=>Math.random()-0.5);
+                const screenQs = shuffledS.slice(0, Math.min(screenCount, shuffledS.length));
+                let mainQs = shuffledM.slice(0, totalCount - screenQs.length);
+                const combined = [...screenQs, ...mainQs];
+                while (combined.length < totalCount) {
+                    const extra = shuffledM[combined.length - screenQs.length];
+                    if (extra && !combined.includes(extra)) combined.push(extra); else break;
+                }
+                return { questions: combined.slice(0, totalCount), screeningCount: screenQs.length };
+            }
+
+            function generateUserSurveys() {
+                const surveys = [];
+                const count = 15 + Math.floor(Math.random()*6);
+                for (let i=0; i<count; i++) {
+                    const supplier = SUPPLIERS[Math.floor(Math.random()*SUPPLIERS.length)];
+                    const { questions, screeningCount } = generateSurveyQuestions();
+                    const gcReward = 50 + Math.floor(Math.random()*451);
+                    surveys.push({
+                        id: 'sv_'+Date.now()+'_'+i+'_'+Math.random().toString(36).substr(2,4),
+                        name: supplier + ' 调研问卷 #'+(i+1),
+                        supplier, gcReward, screeningCount,
+                        totalCount: questions.length, questions,
+                        isRecommended: false, completed: false
+                    });
+                }
+                const recCount = 3 + Math.floor(Math.random()*3);
+                const indices = [...Array(surveys.length).keys()].sort(()=>Math.random()-0.5).slice(0, recCount);
+                indices.forEach(idx => { if(surveys[idx]) surveys[idx].isRecommended = true; });
+                return surveys;
+            }
+
+            function loadData() { try { appData.users = JSON.parse(localStorage.getItem(APP_KEY)||'{}').users||{}; } catch(e) { appData.users = {}; } }
+            function saveData() { localStorage.setItem(APP_KEY, JSON.stringify({users:appData.users})); }
+            function hashPW(pw) { let h=0; for(let i=0;i<pw.length;i++) h=((h<<5)-h+pw.charCodeAt(i))|0; return 'mb_'+Math.abs(h).toString(36); }
+            function getUD() { return appData.currentUser ? appData.users[appData.currentUser] : null; }
+            function updateBadges() {
+                const ud = getUD(), bq = document.getElementById('badgeQuality'), bg = document.getElementById('badgeGC');
+                if(ud && !ud.isBanned) {
+                    bq.textContent = '质量:'+ud.qualityScore; bg.textContent = '🪙 GC:'+ud.gc;
+                    bq.className = 'badge badge-quality';
+                    if(ud.qualityScore<=40) bq.className = 'badge badge-danger';
+                } else if(ud && ud.isBanned) {
+                    bq.textContent = '已封禁'; bq.className = 'badge badge-banned';
+                }
+            }
+            function showToast(m,t='') { const c=document.getElementById('toastContainer'), d=document.createElement('div'); d.className='toast '+(t==='error'?'toast-error':'toast-success'); d.textContent=m; c.appendChild(d); setTimeout(()=>d.remove(),3000); }
+            function showModal(html) { const c=document.getElementById('modalContainer'), ov=document.createElement('div'); ov.className='modal-overlay'; ov.innerHTML=`<div class="modal-dialog">${html}</div>`; c.appendChild(ov); return {overlay:ov, close:()=>ov.remove()}; }
+            function renderBody(html) { document.getElementById('appBody').innerHTML = html; }
+            function setProgress(vis, cur=0, tot=30) { const w=document.getElementById('progressWrap'); w.classList.toggle('hidden',!vis); if(vis) { const pct=tot>0?Math.round((cur/tot)*100):0; document.getElementById('progressBar').style.width=pct+'%'; document.getElementById('progressText').textContent=`题目 ${cur}/${tot}`; document.getElementById('progressPercent').textContent=pct+'%'; } }
+
+            function renderLogin() {
+                renderBody(`<div class="card"><h2>🔐 登录 MoonBazaar</h2>
+                <div class="tabs"><button class="tab-btn active" onclick="window._tab('login')">登录</button><button class="tab-btn" onclick="window._tab('register')">注册</button></div>
+                <div id="loginForm"><div class="input-group"><label>用户名</label><input id="loginUser"></div><div class="input-group"><label>密码</label><input type="password" id="loginPass"></div><button class="btn btn-primary btn-full" onclick="window._doLogin()">登 录</button></div>
+                <div id="registerForm" class="hidden"><div class="input-group"><label>用户名</label><input id="regUser"></div><div class="input-group"><label>邮箱</label><input type="email" id="regEmail"></div><div class="input-group"><label>密码</label><input type="password" id="regPass"></div><div class="input-group"><label>确认密码</label><input type="password" id="regPass2"></div><button class="btn btn-gold btn-full" onclick="window._doRegister()">注 册</button></div></div>
+                <div class="alert alert-info">📢 真实GC：<a href="${REAL_GC_LINK}" target="_blank">${REAL_GC_LINK}</a></div>
+                <div class="alert alert-warning">🤖 本网站由AI生成</div>
+                <div class="alert alert-success">⭐ 完成特别调查+10质量分</div>`);
+                setProgress(false);
+            }
+
+            function renderDashboard() {
+                const ud = getUD(); if(!ud) return renderLogin();
+                if(ud.isBanned) { renderBanned(); return; }
+                if(!ud.surveys) { ud.surveys = generateUserSurveys(); saveData(); }
+                const special = { id:'special', name:'🌟 特别调查（官方AI合作）', isSpecial:true, completed:ud.specialCompleted };
+                const all = [special, ...ud.surveys];
+                all.sort((a,b)=> (a.isSpecial?-1:0) || (b.isRecommended-a.isRecommended) );
+                let cards = '';
+                all.forEach(sv=>{
+                    let tag='', cls='survey-card';
+                    if(sv.isSpecial){ tag='<span class="tag tag-special">特别</span>'; cls+=' special'; }
+                    else if(sv.isRecommended){ tag='<span class="tag tag-recommend">🔥推荐</span>'; cls+=' recommended'; }
+                    cards += `<div class="${cls}" onclick="window._openSurvey('${sv.id}')">${tag}<span class="survey-icon">${sv.isSpecial?'🌟':'📋'}</span><div><div>${sv.name}${sv.completed?' ✅':''}</div><div class="survey-meta">${sv.isSpecial?'5题AI筛选 · 跳转':sv.supplier+' · '+sv.totalCount+'题'}</div></div><span class="survey-gc">${sv.isSpecial?'+10分':sv.gcReward+' GC'}</span></div>`;
+                });
+                renderBody(`<div class="card"><h2>👋 ${appData.currentUser}</h2><p>质量分:${ud.qualityScore} | GC:${ud.gc}</p></div>
+                <div class="alert alert-info">📢 真实GC：<a href="${REAL_GC_LINK}" target="_blank">${REAL_GC_LINK}</a></div>
+                <div class="alert alert-warning">🤖 本网站由AI生成</div>
+                <div class="alert alert-success">⭐ 完成特别调查+10质量分</div>
+                <div>${cards}</div>
+                <div class="card"><h3>🛒 GC商城</h3><div class="shop-grid" id="shopGrid"></div></div>
+                <div class="card"><h3>📦 库存</h3>${ud.inventory?.length ? ud.inventory.map(i=>`<span class="badge">${i}</span>`).join('') : '暂无物品'}</div>
+                <button class="btn btn-outline btn-full btn-sm" onclick="window._changePass()">🔑 修改密码</button>
+                <button class="btn btn-outline btn-full btn-sm" onclick="window._logout()">🚪 退出</button>`);
+                setProgress(false);
+                renderShop();
+            }
+
+            function renderShop() {
+                const items = [
+                    {id:'sf',name:'星空头像框',desc:'闪耀个性',price:30,icon:'🌟'},
+                    {id:'db',name:'钻石徽章',desc:'尊贵标识',price:80,icon:'💎'},
+                    {id:'rn',name:'炫彩用户名',desc:'彩虹特效',price:50,icon:'🎨'},
+                    {id:'vc',name:'VIP标识',desc:'专属皇冠',price:150,icon:'👑'},
+                    {id:'ue',name:'独角兽表情',desc:'可爱套装',price:20,icon:'🦄'}
+                ];
+                const ud = getUD();
+                document.getElementById('shopGrid').innerHTML = items.map(it=>`
+                    <div class="shop-item">
+                        <div class="item-icon">${it.icon}</div>
+                        <div class="item-name">${it.name}</div>
+                        <div class="item-desc">${it.desc}</div>
+                        <div class="item-price">${it.price} GC</div>
+                        ${ud.inventory?.includes(it.name) ? '<div class="item-owned">✅已拥有</div>' : `<button class="btn btn-sm btn-outline" onclick="window._buy('${it.id}','${it.name}',${it.price})" ${ud.gc<it.price?'disabled':''}>兑换</button>`}
+                    </div>
+                `).join('');
+            }
+
+            function renderSurvey(qIndex) {
+                const st = appData.surveyState; if(!st) return renderDashboard();
+                if(qIndex >= st.questions.length) return finishSurvey();
+                const q = st.questions[qIndex], total = st.questions.length;
+                setProgress(true, qIndex, total);
+                const sel = st.answers[qIndex];
+                renderBody(`<div class="card"><div>${qIndex+1}/${total}</div><h3>${q.q}</h3><div class="option-group">${q.o.map((opt,i)=>`<div class="option-item ${sel===opt?'selected':''}" onclick="window._sel(${qIndex},'${opt.replace(/'/g,"\\'")}',this)"><div class="option-radio"></div>${opt}</div>`).join('')}</div></div>
+                <div style="display:flex;gap:8px;">${qIndex>0?`<button class="btn btn-outline" onclick="window._prev(${qIndex})">⬅上题</button>`:''}<button class="btn btn-primary" id="nextBtn" onclick="window._next(${qIndex})" ${!sel?'disabled':''}>下题➡</button></div>
+                <button class="btn btn-outline btn-full btn-sm" onclick="window._confirmQuit()">🔙 返回列表</button>`);
+            }
+
+            function renderSpecialSurvey(qIndex) {
+                const st = appData.surveyState; if(!st) return renderDashboard();
+                if(qIndex >= st.questions.length) return finishSpecialSurvey();
+                const q = st.questions[qIndex];
+                setProgress(true, qIndex, st.questions.length);
+                const sel = st.answers[qIndex];
+                renderBody(`<div class="card"><div>AI筛选题 ${qIndex+1}/${st.questions.length}</div><h3>${q.q}</h3><div class="option-group">${q.o.map((opt,i)=>`<div class="option-item ${sel===opt?'selected':''}" onclick="window._selSpec(${qIndex},'${opt.replace(/'/g,"\\'")}',this)"><div class="option-radio"></div>${opt}</div>`).join('')}</div></div>
+                <button class="btn btn-primary btn-full" id="nextBtn" onclick="window._nextSpec(${qIndex})" ${!sel?'disabled':''}>下一题</button>
+                <button class="btn btn-outline btn-full btn-sm" onclick="window._confirmQuit()">🔙 返回</button>`);
+            }
+
+            function handleScreeningFail() {
+                const ud = getUD();
+                ud.qualityScore = Math.max(0, ud.qualityScore - 10);
+                if(ud.qualityScore <= 20 && !ud.isBanned) ud.isBanned = true;
+                ud.surveys = generateUserSurveys();
+                saveData(); updateBadges(); setProgress(false);
+                if(ud.isBanned) { renderBanned(); } else { showToast('筛选未通过，质量分-10','error'); renderDashboard(); }
+                appData.surveyState = null;
+            }
+
+            function finishSurvey() {
+                const ud = getUD(), st = appData.surveyState;
+                ud.qualityScore += 1; ud.gc += st.gcReward||50;
+                const sv = ud.surveys.find(s=>s.id===st.surveyId); if(sv) sv.completed = true;
+                ud.surveys = generateUserSurveys();
+                saveData(); updateBadges(); setProgress(false);
+                renderBody(`<div class="card text-center"><h2>🎉 完成！</h2><p>质量分+1，GC+${st.gcReward||50}</p><button class="btn btn-primary btn-full" onclick="renderDashboard()">返回</button></div>`);
+                appData.surveyState = null;
+            }
+
+            function finishSpecialSurvey() {
+                const ud = getUD(), st = appData.surveyState;
+                let neg=0; st.questions.forEach((q,i)=>{ if(q.neg.includes(q.o.indexOf(st.answers[i]))) neg++; });
+                if(neg<=2) {
+                    ud.qualityScore += 10; ud.specialCompleted = true;
+                    saveData(); updateBadges();
+                    window.open(PLATFORM_LINK,'_blank');
+                    showToast('特别调查通过！+10分','success');
+                } else {
+                    ud.qualityScore = Math.max(0, ud.qualityScore-10);
+                    showToast('AI筛选未通过，-10分','error');
+                }
+                if(ud.qualityScore<=20&&!ud.isBanned) ud.isBanned=true;
+                ud.surveys = generateUserSurveys();
+                saveData(); setProgress(false);
+                if(ud.isBanned) { renderBanned(); } else renderDashboard();
+                appData.surveyState = null;
+            }
+
+            // 全局交互
+            window._tab = (t) => { document.getElementById('loginForm').classList.toggle('hidden',t!=='login'); document.getElementById('registerForm').classList.toggle('hidden',t!=='register'); };
+            window._doLogin = () => {
+                const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
+                if(!u||!p) return showToast('填写完整','error');
+                const ud=appData.users[u]; if(!ud) return showToast('用户不存在','error');
+                if(ud.passwordHash!==hashPW(p)) return showToast('密码错误','error');
+                if(ud.isBanned) { appData.currentUser=u; updateBadges(); renderBanned(); return; }
+                appData.currentUser=u; if(!ud.surveys) ud.surveys=generateUserSurveys();
+                saveData(); showToast('登录成功','success'); renderDashboard();
+            };
+            window._doRegister = () => {
+                const u=document.getElementById('regUser').value.trim(), e=document.getElementById('regEmail').value.trim(), p=document.getElementById('regPass').value, p2=document.getElementById('regPass2').value;
+                if(!u||u.length<3) return showToast('用户名3-20字符','error');
+                if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return showToast('邮箱无效','error');
+                if(p.length<6) return showToast('密码至少6位','error');
+                if(p!==p2) return showToast('密码不一致','error');
+                if(appData.users[u]) return showToast('用户名已存在','error');
+                appData.users[u]={passwordHash:hashPW(p),email:e,qualityScore:60,gc:10,inventory:[],surveys:generateUserSurveys(),specialCompleted:false};
+                saveData(); showToast('注册成功，请登录','success'); renderLogin();
+            };
+            window._logout = () => { appData.currentUser=null; appData.surveyState=null; saveData(); renderLogin(); };
+            window._changePass = () => {
+                const m=showModal(`<h3>修改密码</h3><div class="input-group"><label>旧密码</label><input type="password" id="oldPass"></div><div class="input-group"><label>新密码</label><input type="password" id="newPass"></div><div class="input-group"><label>确认</label><input type="password" id="newPass2"></div><button class="btn btn-primary btn-full" onclick="window._doChangePass()">确认</button>`);
+                window._currentModal=m;
+            };
+            window._doChangePass = () => {
+                const ud=getUD(), old=document.getElementById('oldPass').value, n=document.getElementById('newPass').value, n2=document.getElementById('newPass2').value;
+                if(ud.passwordHash!==hashPW(old)) return showToast('旧密码错误','error');
+                if(n.length<6) return showToast('新密码至少6位','error');
+                if(n!==n2) return showToast('不一致','error');
+                ud.passwordHash=hashPW(n); saveData(); window._currentModal.close(); showToast('密码已修改','success');
+            };
+
+            // 注意力检测
+            window._openSurvey = (id) => {
+                const ud=getUD(); if(!ud||ud.isBanned) return;
+                if(id==='special') {
+                    if(ud.specialCompleted) return showToast('已完成');
+                    appData.surveyState = { type:'special', questions:SPECIAL_AI_QUESTIONS, currentQ:0, answers:{} };
+                    renderSpecialSurvey(0); return;
+                }
+                const sv=ud.surveys.find(s=>s.id===id); if(!sv||sv.completed) return;
+                showAttentionModal(sv);
+            };
+
+            function showAttentionModal(sv) {
+                const attn = PRE_ATTENTION[Math.floor(Math.random()*PRE_ATTENTION.length)];
+                const modal = showModal(`
+                    <div style="font-size:2rem;">⚠️ 注意力检测</div>
+                    <p style="margin:10px 0;">${attn.q}</p>
+                    <div class="option-group">${attn.o.map((opt,i)=>`<div class="option-item" onclick="window._answerAttention(${i},${attn.c},'${sv.id}')"><div class="option-radio"></div>${opt}</div>`).join('')}</div>
+                `);
+                window._currentAttnModal = modal;
+            }
+
+            window._answerAttention = (selected, correct, surveyId) => {
+                if (selected === correct) {
+                    window._currentAttnModal.close();
+                    const sv = getUD().surveys.find(s=>s.id===surveyId);
+                    if(sv) {
+                        appData.surveyState = { questions: sv.questions, currentQ:0, answers:{}, screeningCount:sv.screeningCount, surveyId:sv.id, gcReward:sv.gcReward };
+                        renderSurvey(0);
+                    }
+                } else {
+                    const ud = getUD();
+                    if (ud) {
+                        ud.qualityScore = Math.max(0, ud.qualityScore - 5);
+                        saveData(); updateBadges();
+                        showToast('注意力检测错误，质量分-5', 'error');
+                        if (ud.qualityScore <= 20 && !ud.isBanned) {
+                            ud.isBanned = true; saveData(); updateBadges();
+                            window._currentAttnModal.close();
+                            renderBanned(); return;
+                        }
+                    }
+                    const sv = getUD().surveys.find(s=>s.id===surveyId);
+                    if (sv) {
+                        const newAttn = PRE_ATTENTION[Math.floor(Math.random()*PRE_ATTENTION.length)];
+                        window._currentAttnModal.overlay.querySelector('.modal-dialog').innerHTML = `
+                            <div style="font-size:2rem;">⚠️ 注意力检测</div>
+                            <p style="margin:10px 0;">${newAttn.q}</p>
+                            <div class="option-group">${newAttn.o.map((opt,i)=>`<div class="option-item" onclick="window._answerAttention(${i},${newAttn.c},'${surveyId}')"><div class="option-radio"></div>${opt}</div>`).join('')}</div>
+                        `;
+                    } else {
+                        window._currentAttnModal.close();
+                    }
+                }
+            };
+
+            window._sel = (qi,val,el) => { appData.surveyState.answers[qi]=val; el.parentElement.querySelectorAll('.option-item').forEach(i=>i.classList.remove('selected')); el.classList.add('selected'); document.getElementById('nextBtn').disabled=false; };
+            window._next = (qi) => {
+                const st=appData.surveyState, q=st.questions[qi], ans=st.answers[qi];
+                if(!ans) return;
+                if(qi < st.screeningCount && q.neg && q.neg.includes(q.o.indexOf(ans))) return handleScreeningFail();
+                if(qi+1 >= st.questions.length) finishSurvey();
+                else { st.currentQ = qi+1; renderSurvey(qi+1); }
+            };
+            window._prev = (qi) => { if(qi<=0) return; appData.surveyState.currentQ=qi-1; renderSurvey(qi-1); };
+            window._selSpec = (qi,val,el) => { appData.surveyState.answers[qi]=val; el.parentElement.querySelectorAll('.option-item').forEach(i=>i.classList.remove('selected')); el.classList.add('selected'); document.getElementById('nextBtn').disabled=false; };
+            window._nextSpec = (qi) => {
+                const st=appData.surveyState, q=st.questions[qi], ans=st.answers[qi];
+                if(!ans) return;
+                if(q.neg && q.neg.includes(q.o.indexOf(ans))) return handleScreeningFail();
+                if(qi+1 >= st.questions.length) finishSpecialSurvey();
+                else { st.currentQ = qi+1; renderSpecialSurvey(qi+1); }
+            };
+            window._confirmQuit = () => {
+                const m=showModal(`<div><h3>退出问卷？</h3><p>不会扣分</p><button class="btn btn-outline btn-full" onclick="window._closeModal()">继续</button><button class="btn btn-primary btn-full" onclick="window._quitSurvey()">退出</button></div>`);
+                window._currentModal=m;
+            };
+            window._closeModal = () => { if(window._currentModal) window._currentModal.close(); };
+            window._quitSurvey = () => { window._closeModal(); const ud=getUD(); if(ud) { ud.surveys = generateUserSurveys(); saveData(); } appData.surveyState=null; setProgress(false); renderDashboard(); };
+            window._buy = (id,name,price) => {
+                const ud=getUD(); if(ud.gc<price) return showToast('GC不足','error');
+                if(ud.inventory.includes(name)) return showToast('已拥有','error');
+                ud.gc-=price; ud.inventory.push(name); saveData(); updateBadges();
+                showToast('兑换成功！','success'); renderDashboard();
+            };
+
+            function renderBanned() {
+                updateBadges();
+                setProgress(false);
+                renderBody(`<div class="banned-fullscreen">
+                    <div class="ban-icon">🚫</div>
+                    <h2>账户已被永久封禁</h2>
+                    <p>您的质量分低于20分，已被永久封禁，无法进行任何操作。</p>
+                    <button class="btn btn-outline btn-sm" onclick="window._logout()">切换账户</button>
+                </div>`);
+            }
+
+            function init() {
+                loadData();
+                updateBadges();
+                if (appData.currentUser && appData.users[appData.currentUser]) {
+                    const ud = getUD();
+                    if (ud && ud.isBanned) {
+                        renderBanned();
+                    } else if (appData.surveyState) {
+                        if (appData.surveyState.type === 'special') renderSpecialSurvey(appData.surveyState.currentQ);
+                        else renderSurvey(appData.surveyState.currentQ);
+                    } else {
+                        renderDashboard();
+                    }
+                } else {
+                    appData.currentUser = null;
+                    appData.surveyState = null;
+                    renderLogin();
+                }
+            }
+            init();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moonbazaar Wheel of Fate Simulator</title>
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet"> -->
+</head>
+<body>
+    <h1>Moonbazaar Wheel of Fate Simulator</h1>
+    <p>GC: <span id="gascoinele"></span><input type="number" min="0" id="gascoininput"/><button onclick="setGC()">设置</button></p>
+    <p>赢率: <span id="winoddsele"></span><input type="number" min="0" max="1"  id="winoddsinput" style="width: 100px;"/><button onclick="setWinOdds()">设置 (格式为0.60)</button></p>
+    <p>结果: <span id="roll-data"></span></p>
+    <button onclick="challengeFateUI()">挑战命运</button>
+    <p>本网页不对moonbazaar命运转盘实际结果做参考</p>
+    <style>
+        * {
+            /* font-family: "Orbitron", 'sans-serif'; */
+        }
+    </style>
+    <script>
+var initWinOdds = 0.49;
+var initGasCoin = 761.174;
+/**
+ * 命运转盘 (单人)
+ * 当前赢率: 49%
+ * 当前输率: 51%
+ * ?
+ * 挑战命运 (10 GC)
+ * 赢: 12~180 GC, 但下次难度增加! (winOdds-=0.01)
+ * 输: 扣除 10~240 GC, 几率重置 (winOdds+=0.01)
+ */
+function challengeFate(winOdds, gascoin) {
+    var random = Math.random();
+    if (random >= winOdds) {
+        var reduced = Math.min(Math.random() * 230 + 10, gascoin);
+        return [gascoin - reduced, winOdds + 0.01, -reduced];
+    }
+    else {
+        var increased = Math.random() * (180 - 12) + 12;
+        return [gascoin + increased, winOdds - 0.01, increased];
+    }
+}
+// function runALife() {
+//     var _a;
+//     var turns = 0;
+//     var winOdds = initWinOdds;
+//     var gascoin = initGasCoin;
+//     while (1) {
+//         if (gascoin >= 10) {
+//             _a = challengeFate(winOdds, gascoin), gascoin = _a[0], winOdds = _a[1];
+//             ;
+//             turns++;
+//         }
+//         else {
+//             break;
+//         }
+//         if (turns >= 1000) {
+//             return [false, NaN];
+//         }
+//     }
+//     return [true, turns];
+// }
+// var simulatedata = [];
+// for (var i = 0; i < 1000; i++) {
+//     var fateResult = runALife();
+//     if (fateResult[0]) {
+//         simulatedata.push(fateResult[1]);
+//     }
+// }
+// //赢的期望为+84,输的期望为-115，整体为-31,
+// console.log("Average turn", simulatedata.reduce(function (x, y) { return x + y; }) / (simulatedata.length));
+
+</script>
+
+<script>
+    let winOdds = 0.50;
+    let gascoin = 100;
+    let gascoinElement = document.getElementById("gascoinele")
+    let winOddsElement = document.getElementById("winoddsele")
+    function updateUI() {
+        gascoinElement.innerText = gascoin.toFixed(3);
+        winOddsElement.innerText = (winOdds*100)+"%";
+    }
+    function setGC() {
+        gascoin = +(document.getElementById("gascoininput").value)
+        if (!isFinite(gascoin)) {
+            gascoin = 100;
+        }
+        updateUI();
+    }
+    function setWinOdds() {
+        winOdds = +(document.getElementById("winoddsinput").value)
+        if (!isFinite(winOdds)) {
+            winOdds = 0.5;
+        }
+        updateUI();
+    }
+    function challengeFateUI() {
+        if (gascoin < 10) return;
+        const rollElement = document.getElementById("roll-data")
+        rollElement.className = "rolling";
+        let rollInterval = setInterval(()=>{
+            rollElement.innerText = Math.floor(Math.random()*100)
+        }, 50);
+        setTimeout(function() {
+            clearInterval(rollInterval)
+            let chal = challengeFate(winOdds,gascoin);
+            if (chal[2] > 0){
+                rollElement.innerText = "+"+chal[2].toFixed(3);
+                rollElement.className = "win";
+            } else {
+                rollElement.innerText = chal[2].toFixed(3);
+                rollElement.className = "failed";
+            }
+            [gascoin,winOdds] = [chal[0], chal[1]]
+            updateUI();
+        }, 750)
+
+    }
+    updateUI();
+</script>
+<style>
+    .win {
+        color: green;
+    }
+    .failed {
+        color: red;
+    }
+</style>
+</body>
+</html>
