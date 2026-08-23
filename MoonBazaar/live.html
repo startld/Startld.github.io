@@ -76,27 +76,9 @@
 
         <hr>
         <div style="margin: 20px;">
-            <h2>引导页</h2>
-            <p>欢迎来到Mort's Web world!<br>我是Mort MortIsntCoder!<br>您现在处于 index.html 这只是网站的很小一部分 你可以通过一下链接来跳转到你想要的页面！</p>
-            <div style="border-radius: 10px;border-style: solid;padding-left: 51px;">
-                <div style="display: flex;flex-direction: row;">
-                    <h3>LABLE</h3>
-                    <div
-                        style="border-radius: 8px;background-color: rgb(80, 117, 82);display: flex;justify-content: center;align-items: center;height: 20px;margin-right: 10px;">
-                        <h6>SUBTITLE <h6>
-                    </div>
-                </div>
-                <hr>
-                </hr>
-                <p>
-                    <a href="#l1xx"><button
-                            style="border-radius: 8px;background-color: rgb(255, 255, 255);padding: 5px;">ZBUTTOn</button></a>
-                </p>
-
-                <hr>
-                </hr>
-            </div>
-
+            <h2>动态</h2>
+            <p>MoonBazaar最近动态 走的主页那个api 给的是前20 走公共cross所以非常慢！</p>
+            
             <!-- 最近动态卡片（唯一新增功能） -->
             <div style="border-radius: 10px;border-style: solid;padding-left: 51px;margin-top: 20px;">
                 <div style="display: flex;flex-direction: row;">
@@ -173,21 +155,21 @@
             try {
                 // 获取最新 20 条，不再带有 token
                 const direct = 'https://moonbazaar.xyz/home/get_live_feed.php?limit=20&offset=0';
-                // moonbazaar 未开放 CORS，走代理转发（按顺序回退）
+                // moonbazaar 未开放 CORS，并发请求所有代理，取最快成功的
                 const proxies = [
+                    'https://cors.eu.org/' + direct,
                     'https://api.allorigins.win/raw?url=' + encodeURIComponent(direct),
-                    'https://corsproxy.io/?url=' + encodeURIComponent(direct),
                     'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(direct)
                 ];
-                let response = null;
-                for (const url of proxies) {
-                    try {
-                        response = await fetch(url);
-                        if (response.ok) break;
-                    } catch (e) { /* try next proxy */ }
-                }
-                if (response && response.ok) {
-                    const data = await response.json();
+                const tryFetch = async (url) => {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res;
+                };
+                const results = await Promise.allSettled(proxies.map(tryFetch));
+                const ok = results.find(r => r.status === 'fulfilled');
+                if (ok) {
+                    const data = await ok.value.json();
                     // 清空并加载最新的20条，避免和推流出现重复元素显示
                     container.innerHTML = '';
                     data.forEach(item => {

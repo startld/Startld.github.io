@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>幸运大厅 · MoonBazaar</title>
+
+    <!-- ===== 字体 & 图标库 ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ===== HARD UI / NEO-BRUTALISM THEME ===== */
+        :root {
+            --bg-light: #ffffff;
+            --bg-subtle: #f0f8ff;
+            --text-primary: #154963;
+            --text-secondary: #595857;
+            --accent-blue: #2993c7;
+            --accent-blue-hover: #1f7cac;
+            --border-width: 2px;
+            --hard-shadow: 4px 4px 0px #154963;
+            --gold: #f1c40f;
+            --red: #dc3545;
+            --green: #28a745;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-subtle);
+            color: var(--text-secondary);
+        }
+
+        /* ===== LAYOUT ===== */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-light);
+            border-right: var(--border-width) solid var(--text-primary);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8em;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--text-primary);
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar-nav a {
+            display: block;
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 1rem;
+            border: var(--border-width) solid transparent;
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            background: transparent;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+        }
+        .sidebar-nav a:hover {
+            border: var(--border-width) solid var(--text-primary);
+            box-shadow: 3px 3px 0 var(--text-primary);
+            transform: translate(-2px, -2px);
+            background: #fff;
+        }
+        .sidebar-nav a.active {
+            background-color: var(--text-primary);
+            color: #fff;
+            border: var(--border-width) solid var(--text-primary);
+            box-shadow: 3px 3px 0 var(--accent-blue);
+        }
+        .sidebar-nav a.go-link {
+            margin-top: 2rem;
+            border-color: var(--gold);
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+        .sidebar-nav a.go-link:hover {
+            box-shadow: 3px 3px 0 var(--gold);
+        }
+        .sidebar-footer {
+            margin-top: auto;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+        }
+        .page-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 2em;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            transition: opacity 0.2s;
+        }
+        .balance-badge {
+            display: inline-block;
+            background: #fff;
+            padding: 0.8rem 2rem;
+            color: var(--text-primary);
+            font-weight: 800;
+            margin-top: 1rem;
+            border: 2px solid var(--text-primary);
+            box-shadow: var(--hard-shadow);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+        }
+
+        /* ===== DATA BOX ===== */
+        .data-box {
+            background: var(--bg-light);
+            border: var(--border-width) solid var(--text-primary);
+            box-shadow: var(--hard-shadow);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+        }
+        .sec-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4em;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--text-primary);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ===== ROOM CARD (游戏内容) ===== */
+        .room-status-card {
+            background: #fff;
+            color: var(--text-primary);
+            border: 2px solid var(--text-primary);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .settings-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: var(--text-primary);
+            font-size: 1.4rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.3s;
+        }
+        .settings-icon:hover {
+            transform: rotate(90deg);
+            color: var(--accent-blue);
+        }
+
+        .room-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .room-info-item {
+            background: #fff;
+            padding: 1rem;
+            border: 2px solid var(--text-primary);
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        .room-info-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-family: 'Poppins', sans-serif;
+        }
+        .room-info-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .progress-container {
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'Poppins', sans-serif;
+        }
+        .progress-track {
+            background: #fff;
+            height: 16px;
+            border: 2px solid var(--text-primary);
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--green);
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+            border-right: 2px solid var(--text-primary);
+        }
+
+        .player-slots {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .slot {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: 2px solid var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #ccc;
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+        }
+        .slot.occupied {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: var(--text-primary);
+            box-shadow: 3px 3px 0 var(--text-primary);
+        }
+        .slot.me {
+            background: var(--gold);
+            color: var(--text-primary);
+        }
+
+        .btn-join {
+            background: var(--green);
+            color: #fff;
+            border: 2px solid var(--text-primary);
+            padding: 1rem 3rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.1s;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 4px 4px 0 var(--text-primary);
+        }
+        .btn-join:hover:not(:disabled) {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--text-primary);
+        }
+        .btn-join:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0;
+        }
+        .btn-join:disabled {
+            background: #e9ecef;
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            border-color: #ccc;
+        }
+
+        /* ===== 管理面板 - 始终显示 ===== */
+        .admin-panel {
+            margin-top: 2rem;
+            border: 2px dashed var(--red);
+            padding: 1rem;
+            text-align: center;
+            background: #fff5f5;
+            border-radius: 8px;
+            display: block;
+        }
+        .admin-panel button {
+            background: var(--red);
+            color: #fff;
+            border: 2px solid var(--text-primary);
+            padding: 0.5rem 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--text-primary);
+            transition: 0.1s;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+        }
+        .admin-panel button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0 var(--text-primary);
+        }
+        .admin-panel button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0;
+        }
+
+        /* ===== SPIN AREA ===== */
+        .spin-area {
+            background: #fff;
+            border: 2px solid var(--text-primary);
+            padding: 2rem;
+            text-align: center;
+        }
+        .result-disp {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            min-height: 5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--text-primary);
+            border: 3px solid var(--text-primary);
+            margin: 1.5rem 0;
+            background: #f8f9fa;
+        }
+        .win-txt {
+            color: var(--green);
+            background: #e8f5e9;
+        }
+        .lose-txt {
+            color: var(--red);
+            background: #fbecec;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            max-width: 400px;
+            margin: 0 auto 0 auto;
+        }
+        .stat-card {
+            background: #fff;
+            padding: 0.8rem;
+            font-size: 0.9rem;
+            border: 2px solid var(--text-primary);
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .spin-btn {
+            background: var(--text-primary);
+            color: #fff;
+            padding: 1rem 3rem;
+            border: 2px solid #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 4px 4px 0 #000;
+            font-weight: 700;
+        }
+        .spin-btn:hover:not(:disabled) {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #000;
+        }
+        .spin-btn:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0 #000;
+        }
+        .spin-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background: #555;
+        }
+
+        /* ===== CHEAT SECTION (inside room) ===== */
+        .cheat-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #ccc;
+        }
+        .cheat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .cheat-header label {
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cheat-header input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1d2a3a;
+        }
+        .cheat-controls {
+            display: none;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #f9f9f9;
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        .cheat-controls.show {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+        .cheat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cheat-row label {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .cheat-row select,
+        .cheat-row input {
+            padding: 4px 6px;
+            border: 1px solid #333;
+            font-weight: bold;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            border-radius: 3px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cheat-row select:disabled,
+        .cheat-row input:disabled {
+            background: #f0f0f0;
+            color: #999;
+        }
+        .cheat-row select:not(:disabled),
+        .cheat-row input:not(:disabled) {
+            background: #fff;
+            color: #1d2a3a;
+        }
+        .cheat-row input[type="number"] {
+            width: 70px;
+            text-align: center;
+        }
+        .cheat-row select {
+            width: 80px;
+        }
+        .btn-cheat-apply {
+            padding: 4px 15px;
+            background: #1d2a3a;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 3px;
+            transition: background 0.2s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-cheat-apply:hover:not(:disabled) {
+            background: #2c3e50;
+        }
+        .btn-cheat-apply:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== SINGLE CHEAT (spin) ===== */
+        .cheat-section-spin {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #ccc;
+        }
+        .cheat-section-spin .cheat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .cheat-section-spin .cheat-header label {
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cheat-section-spin .cheat-header input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1d2a3a;
+        }
+        .cheat-section-spin .cheat-controls {
+            display: none;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: #f9f9f9;
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        .cheat-section-spin .cheat-controls.show {
+            display: flex;
+        }
+        .cheat-section-spin .cheat-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cheat-section-spin .cheat-group label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .cheat-section-spin .cheat-group input {
+            width: 60px;
+            padding: 4px 0;
+            text-align: center;
+            border: 1px solid #333;
+            font-weight: bold;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cheat-section-spin .cheat-group input:disabled {
+            background: #f0f0f0;
+            color: #999;
+        }
+        .cheat-section-spin .cheat-group input:not(:disabled) {
+            background: #fff;
+            color: #1d2a3a;
+        }
+        .cheat-section-spin .cheat-group span {
+            font-size: 13px;
+        }
+
+        /* ===== MODAL (Auto Join) ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(21, 73, 99, 0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: #fff;
+            width: 90%;
+            max-width: 450px;
+            border: 3px solid #000;
+            padding: 2rem;
+            box-shadow: 8px 8px 0 #000;
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.2s ease-out;
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+        }
+        .modal-desc {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+        }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+            border: 2px solid #eee;
+            padding: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.2s;
+            border: 2px solid var(--text-primary);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.2s;
+            border: 2px solid var(--text-primary);
+        }
+        input:checked+.slider {
+            background-color: var(--accent-blue);
+        }
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+        .amount-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+        .amt-btn {
+            border: 2px solid var(--text-primary);
+            background: #fff;
+            color: var(--text-primary);
+            padding: 0.8rem 0;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.1s;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .amt-btn:hover {
+            background: #eee;
+        }
+        .amt-btn.active {
+            background: var(--text-primary);
+            color: #fff;
+            box-shadow: 3px 3px 0 #000;
+            transform: translate(-2px, -2px);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn-save {
+            flex: 1;
+            background: var(--text-primary);
+            color: #fff;
+            border: 2px solid #000;
+            padding: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 4px 4px 0 #000;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .btn-cancel {
+            flex: 1;
+            background: #fff;
+            color: var(--text-primary);
+            border: 2px solid var(--text-primary);
+            padding: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .btn-save:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #000;
+        }
+        .btn-cancel:hover {
+            background: #f0f0f0;
+        }
+
+        /* ===== BALANCE MODIFY (footer) ===== */
+        .footer-controls {
+            margin-top: 1.5rem;
+            border-top: 2px dashed #ccc;
+            padding-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .balance-modify {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .balance-modify label {
+            font-size: 14px;
+            font-weight: bold;
+            font-family: 'Poppins', sans-serif;
+        }
+        .balance-modify input {
+            width: 100px;
+            padding: 6px 0;
+            text-align: center;
+            border: 2px solid var(--text-primary);
+            font-weight: bold;
+            outline: none;
+            font-size: 14px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .balance-modify button {
+            padding: 6px 18px;
+            background: var(--text-primary);
+            color: #fff;
+            border: 2px solid #000;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #000;
+            transition: 0.1s;
+            font-size: 14px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .balance-modify button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0 #000;
+        }
+        .balance-modify button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0 #000;
+        }
+
+        /* ===== FEED SECTION (近期动态) ===== */
+        .feed-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .feed-status {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+        }
+        .feed-status .live-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #e53e3e;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse-dot 1.8s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .btn-refresh-feed {
+            background: var(--text-primary);
+            color: #fff;
+            border: 2px solid var(--text-primary);
+            padding: 6px 18px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--accent-blue);
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-refresh-feed:hover:not(:disabled) {
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0 var(--accent-blue);
+        }
+        .btn-refresh-feed:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0;
+        }
+        .btn-refresh-feed:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-refresh-feed .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .feed-container {
+            max-height: 500px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            border: 1px solid var(--text-primary);
+            background: #fafbfc;
+            padding: 0.5rem;
+        }
+        .feed-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #fff;
+            border: 2px solid var(--text-primary);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .feed-item .left {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            align-items: baseline;
+        }
+        .feed-item .username {
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+        .feed-item .source {
+            color: var(--text-secondary);
+        }
+        .feed-item .amount {
+            font-weight: 800;
+            padding: 1px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .feed-item .amount.gain {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #155724;
+        }
+        .feed-item .amount.loss {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #721c24;
+        }
+        .feed-item .time {
+            color: #a0aec0;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            margin-left: auto;
+        }
+        .feed-item.new {
+            animation: slideDown 0.35s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feed-container::-webkit-scrollbar { width: 5px; }
+        .feed-container::-webkit-scrollbar-track { background: #edf2f7; border-radius: 8px; }
+        .feed-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 8px; }
+
+        .feed-status-msg {
+            text-align: center;
+            padding: 30px 20px;
+            color: #a0aec0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+        }
+        .feed-status-msg .icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* ===== MOBILE ===== */
+        .mobile-header {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            .main-content {
+                padding: 1.5rem;
+                padding-top: 80px;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 1002;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                width: 280px;
+                border-right: 2px solid var(--text-primary);
+                box-shadow: 5px 0 0 rgba(0, 0, 0, 0.1);
+                background: #fff;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .mobile-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.5rem;
+                background: var(--bg-light);
+                border-bottom: 2px solid var(--text-primary);
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1001;
+            }
+            .mobile-header-brand {
+                font-family: 'Orbitron', sans-serif;
+                color: var(--text-primary);
+                font-size: 1.5em;
+                font-weight: 700;
+            }
+            .menu-toggle {
+                font-size: 1.5rem;
+                cursor: pointer;
+                color: var(--text-primary);
+            }
+            .room-info-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .result-disp {
+                font-size: 2.5rem;
+            }
+            .btn-join {
+                width: 100%;
+                max-width: 100%;
+            }
+            .player-slots {
+                gap: 6px;
+            }
+            .slot {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+            .feed-header-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-refresh-feed {
+                justify-content: center;
+            }
+        }
+
+        /* ===== RULES TEXT ===== */
+        .rules-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+        }
+        .rules-text i {
+            margin-right: 4px;
+        }
+        .rules-text .highlight {
+            color: var(--text-primary);
+            font-weight: 800;
+        }
+        .spin-rules {
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-align: center;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            font-family: 'Poppins', sans-serif;
+        }
+        .spin-rules div {
+            margin-bottom: 5px;
+        }
+        .spin-rules .win {
+            color: var(--green);
+        }
+        .spin-rules .lose {
+            color: var(--red);
+        }
+        .room-status-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            min-height: 1.8rem;
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== MOBILE HEADER ===== -->
+    <header class="mobile-header">
+        <div class="mobile-header-brand">MoonBazaar</div>
+        <i class="fas fa-bars menu-toggle" id="menu-toggle"></i>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">MoonBazaar</div>
+            <nav class="sidebar-nav">
+                <a href="#" id="feed-nav-link">近期动态</a>
+                <a href="#" class="active" id="game-nav-link">运气游戏</a>
+                <a href="https://mnb.ee?ar=54435" target="_blank" class="go-link">
+                    <i class="fas fa-rocket"></i> GO TO MoonBazaar
+                </a>
+            </nav>
+            <div class="sidebar-footer"></div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
+            <header class="page-header">
+                <h1 id="page-title">幸运大厅</h1>
+                <div class="balance-badge">
+                    余额: <span id="global-balance">10.00</span> GC
+                </div>
+            </header>
+
+            <!-- ===== 游戏内容 (默认显示) ===== -->
+            <div id="game-content">
+                <!-- ============================================================ -->
+                <!--  SECTION 1 : 即时幸运房间 (多人) -->
+                <!-- ============================================================ -->
+                <section class="data-box">
+                    <h2 class="sec-title"><i class="fas fa-users" style="color:var(--gold)"></i> 即时幸运房间 (多人)</h2>
+                    <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-weight:600; font-family:'Poppins',sans-serif;">人数满员后立即自动开奖</p>
+
+                    <div class="room-status-card">
+                        <i class="fas fa-cog settings-icon" id="lobby-settings-icon"></i>
+
+                        <div class="room-info-grid">
+                            <div class="room-info-item">
+                                <div class="room-info-label">入场费</div>
+                                <div class="room-info-val" id="lobby-fee-display">10 GC</div>
+                            </div>
+                            <div class="room-info-item">
+                                <div class="room-info-label">当前人数</div>
+                                <div class="room-info-val"><span id="lobby-count">0</span> / <span id="lobby-max">17</span></div>
+                            </div>
+                            <div class="room-info-item">
+                                <div class="room-info-label">本期奖池</div>
+                                <div class="room-info-val" id="lobby-pool">0</div>
+                            </div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span id="lobby-status-text">等待玩家加入..</span>
+                                <span id="pct-text">0%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="progress-bar" style="width:0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="player-slots" id="player-slots-container"></div>
+
+                        <div class="room-status-text" id="lobby-status-msg">等待玩家加入..</div>
+
+                        <button class="btn-join" id="lobby-join-btn">加入房间</button>
+
+                        <!-- 作弊模式 (房间) -->
+                        <div class="cheat-section">
+                            <div class="cheat-header">
+                                <label for="lobby-cheat-toggle">作弊模式</label>
+                                <input type="checkbox" id="lobby-cheat-toggle" />
+                            </div>
+                            <div class="cheat-controls" id="lobby-cheat-controls">
+                                <div class="cheat-row">
+                                    <label>结果类型:</label>
+                                    <select id="lobby-cheat-type" disabled>
+                                        <option value="random">随机</option>
+                                        <option value="win">获得</option>
+                                        <option value="lose">失去</option>
+                                    </select>
+                                    <label>数值:</label>
+                                    <input type="number" id="lobby-cheat-amount" min="0" step="1" value="50" disabled />
+                                    <span>GC</span>
+                                    <button class="btn-cheat-apply" id="lobby-cheat-modify" disabled>修改数值</button>
+                                </div>
+                                <div class="cheat-row">
+                                    <label>自定义人数:</label>
+                                    <input type="number" id="lobby-cheat-count" min="0" max="17" step="1" value="0" disabled />
+                                    <span>(0-17)</span>
+                                    <button class="btn-cheat-apply" id="lobby-cheat-apply" disabled>应用人数</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rules-text">
+                        <i class="fas fa-info-circle"></i>
+                        本房间固定 <span class="highlight">17</span> 人发车，每人投入 <span class="highlight">10</span> GC。<br />
+                        最后一人加入时自动触发开奖，随机分配奖金。
+                    </div>
+
+                    <!-- ===== 管理面板 - 始终显示 ===== -->
+                    <div class="admin-panel">
+                        <h4 style="color:var(--red); font-family:'Poppins',sans-serif;"><i class="fas fa-tools"></i> 管理面板</h4>
+                        <button id="admin-reset-btn">重置 / 强制结束房间</button>
+                    </div>
+                </section>
+
+                <!-- ============================================================ -->
+                <!--  SECTION 2 : 命运转盘 (单人) -->
+                <!-- ============================================================ -->
+                <section class="data-box">
+                    <h2 class="sec-title"><i class="fas fa-bullseye" style="color:var(--accent-blue)"></i> 命运转盘 (单人)</h2>
+                    <div class="spin-area">
+                        <div class="stats-grid">
+                            <div class="stat-card">当前赢率: <b id="win-rate" style="color:var(--green)">49%</b></div>
+                            <div class="stat-card">当前输率: <b id="lose-rate" style="color:var(--red)">51%</b></div>
+                        </div>
+                        <div class="result-disp" id="spin-result">?</div>
+                        <div id="spin-msg" style="height:1.5rem; margin-bottom:1.5rem; font-weight:600; color:var(--text-secondary); font-family:'Poppins',sans-serif;"></div>
+                        <button class="spin-btn" id="btn-spin">挑战命运 (10 GC)</button>
+                        <div class="spin-rules">
+                            <div class="win"><i class="fas fa-check-circle"></i> 赢：12~180 GC，但下次难度增加！</div>
+                            <div class="lose"><i class="fas fa-times-circle"></i> 输：扣除 10~240 GC，几率重置</div>
+                        </div>
+                    </div>
+
+                    <!-- 作弊模式 (单人) -->
+                    <div class="cheat-section-spin">
+                        <div class="cheat-header">
+                            <label for="cheat-toggle">作弊模式</label>
+                            <input type="checkbox" id="cheat-toggle" />
+                        </div>
+                        <div class="cheat-controls" id="cheat-controls">
+                            <div class="cheat-group">
+                                <label>赢率:</label>
+                                <input type="number" id="cheat-win" min="0" max="100" value="49" disabled />
+                                <span>%</span>
+                            </div>
+                            <div class="cheat-group">
+                                <label>输率:</label>
+                                <input type="number" id="cheat-lose" min="0" max="100" value="51" disabled />
+                                <span>%</span>
+                            </div>
+                            <button class="btn-cheat-apply" id="apply-cheat" disabled>应用</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== FOOTER : 修改余额 ===== -->
+                <div class="footer-controls">
+                    <div class="balance-modify">
+                        <label>修改余额:</label>
+                        <input type="number" id="set-balance-input" value="10.00" step="0.01" min="0" />
+                        <button id="set-balance-btn">设置</button>
+                    </div>
+                </div>
+            </div> <!-- end game-content -->
+
+            <!-- ===== 近期动态内容 (独立视图) ===== -->
+            <div id="feed-content" style="display:none;">
+                <section class="data-box">
+                    <div class="feed-header-actions">
+                        <span class="feed-status"><span class="live-dot"></span> 实时动态</span>
+                        <button class="btn-refresh-feed" id="refreshFeedBtn">
+                            <span id="refreshIcon">⟳</span>
+                            <span id="refreshText">刷新</span>
+                        </button>
+                    </div>
+                    <div class="feed-container" id="feed-container">
+                        <div class="feed-status-msg">
+                            <span class="icon">⏳</span>
+                            加载中…
+                        </div>
+                    </div>
+                    <div style="margin-top: 0.8rem; font-size: 0.8rem; color: var(--text-secondary); text-align: right; font-family: 'Poppins', sans-serif;">
+                        共 <strong id="feed-count">0</strong> 条记录 · 每 <span id="poll-interval-display">5</span> 秒自动更新
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===== MODAL : 自动加入设置 ===== -->
+    <div class="modal-overlay" id="auto-join-modal">
+        <div class="modal-box">
+            <h3 class="modal-title"><i class="fas fa-robot"></i> 自动加入设置</h3>
+            <p class="modal-desc">开启后，当房间有空位时会自动加入。</p>
+            <div class="switch-container">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auto-join-switch" />
+                    <span class="slider"></span>
+                </label>
+                <span style="font-weight:700; font-size:0.9rem; color:var(--text-primary); font-family:'Poppins',sans-serif;">开启自动加入</span>
+            </div>
+            <div style="text-align:left; font-size:0.9rem; margin-bottom:0.5rem; font-weight:700; color:var(--text-secondary); font-family:'Poppins',sans-serif;">选择自动投入金额 (GC):</div>
+            <div class="amount-grid">
+                <div class="amt-btn" data-amt="5">5</div>
+                <div class="amt-btn active" data-amt="20">20</div>
+                <div class="amt-btn" data-amt="50">50</div>
+                <div class="amt-btn" data-amt="100">100</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="btn-cancel-auto">取消</button>
+                <button class="btn-save" id="btn-save-auto">确认并保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // ================================================================
+            //  视图切换 & 标题动态
+            // ================================================================
+            const gameLink = document.getElementById('game-nav-link');
+            const feedLink = document.getElementById('feed-nav-link');
+            const gameContent = document.getElementById('game-content');
+            const feedContent = document.getElementById('feed-content');
+            const pageTitle = document.getElementById('page-title');
+
+            function showGame() {
+                gameContent.style.display = 'block';
+                feedContent.style.display = 'none';
+                gameLink.classList.add('active');
+                feedLink.classList.remove('active');
+                pageTitle.textContent = '幸运大厅';
+            }
+
+            function showFeed() {
+                gameContent.style.display = 'none';
+                feedContent.style.display = 'block';
+                feedLink.classList.add('active');
+                gameLink.classList.remove('active');
+                pageTitle.textContent = '近期动态';
+                if (!feedLoaded) {
+                    loadFeed(true);
+                }
+            }
+
+            gameLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showGame();
+                sidebar.classList.remove('active');
+            });
+
+            feedLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showFeed();
+                sidebar.classList.remove('active');
+            });
+
+            showGame();
+
+            // ================================================================
+            //  全局状态 (游戏相关)
+            // ================================================================
+            let gascoin = 10.00;
+            let winRate = 49;
+            let loseRate = 51;
+            let autoJoinEnabled = false;
+            let autoJoinAmount = 20;
+
+            // DOM 引用
+            const globalBalanceEl = document.getElementById('global-balance');
+            const winRateEl = document.getElementById('win-rate');
+            const loseRateEl = document.getElementById('lose-rate');
+            const spinResultEl = document.getElementById('spin-result');
+            const spinMsgEl = document.getElementById('spin-msg');
+            const btnSpin = document.getElementById('btn-spin');
+            const balanceInput = document.getElementById('set-balance-input');
+            const setBalanceBtn = document.getElementById('set-balance-btn');
+
+            // 单人作弊
+            const cheatToggle = document.getElementById('cheat-toggle');
+            const cheatControls = document.getElementById('cheat-controls');
+            const cheatWin = document.getElementById('cheat-win');
+            const cheatLose = document.getElementById('cheat-lose');
+            const applyCheatBtn = document.getElementById('apply-cheat');
+
+            // 大厅DOM
+            const LOBBY_MAX = 17;
+            const LOBBY_FEE = 10;
+            let lobbyPlayers = [];
+            let lobbyStatus = 'idle';
+            let lobbyTimer = null;
+            let botRecruitTimer = null;
+            let lobbyJoinDisabled = false;
+            let lobbyJackpot = 0;
+
+            let lobbyCheatEnabled = false;
+            let cheatResultType = 'random';
+            let cheatAmount = 50;
+
+            const lobbyCountEl = document.getElementById('lobby-count');
+            const lobbyMaxEl = document.getElementById('lobby-max');
+            const lobbyPoolEl = document.getElementById('lobby-pool');
+            const progressBar = document.getElementById('progress-bar');
+            const pctText = document.getElementById('pct-text');
+            const lobbyStatusText = document.getElementById('lobby-status-text');
+            const lobbyStatusMsg = document.getElementById('lobby-status-msg');
+            const lobbyJoinBtn = document.getElementById('lobby-join-btn');
+            const slotsContainer = document.getElementById('player-slots-container');
+
+            const lobbyCheatToggle = document.getElementById('lobby-cheat-toggle');
+            const lobbyCheatControls = document.getElementById('lobby-cheat-controls');
+            const lobbyCheatType = document.getElementById('lobby-cheat-type');
+            const lobbyCheatAmount = document.getElementById('lobby-cheat-amount');
+            const lobbyCheatCountInput = document.getElementById('lobby-cheat-count');
+            const lobbyCheatApplyBtn = document.getElementById('lobby-cheat-apply');
+            const lobbyCheatModifyBtn = document.getElementById('lobby-cheat-modify');
+
+            const adminResetBtn = document.getElementById('admin-reset-btn');
+
+            // 自动加入模态框
+            const autoModal = document.getElementById('auto-join-modal');
+            const autoSwitch = document.getElementById('auto-join-switch');
+            const autoAmountBtns = document.querySelectorAll('.amt-btn');
+            const btnCancelAuto = document.getElementById('btn-cancel-auto');
+            const btnSaveAuto = document.getElementById('btn-save-auto');
+            const settingsIcon = document.getElementById('lobby-settings-icon');
+
+            lobbyMaxEl.textContent = LOBBY_MAX;
+
+            // ================================================================
+            //  游戏工具函数
+            // ================================================================
+            function generateJackpot() {
+                return Math.floor(Math.random() * 491) + 10;
+            }
+
+            function updateUI() {
+                globalBalanceEl.textContent = gascoin.toFixed(2);
+                balanceInput.value = gascoin.toFixed(2);
+                winRateEl.textContent = winRate + '%';
+                loseRateEl.textContent = loseRate + '%';
+                btnSpin.disabled = (gascoin < 10);
+
+                const count = lobbyPlayers.length;
+                lobbyCountEl.textContent = count;
+                lobbyPoolEl.textContent = lobbyJackpot;
+
+                const percent = Math.min(100, (count / LOBBY_MAX) * 100);
+                progressBar.style.width = percent + '%';
+                pctText.textContent = Math.round(percent) + '%';
+
+                if (lobbyStatus === 'idle') {
+                    if (count === 0) {
+                        lobbyStatusText.textContent = '等待玩家加入..';
+                        lobbyStatusMsg.textContent = '等待玩家加入..';
+                    } else if (count < LOBBY_MAX) {
+                        lobbyStatusText.textContent = `已有 ${count} 人加入，等待更多玩家..`;
+                        lobbyStatusMsg.textContent = `已有 ${count} 人加入，等待更多玩家..`;
+                    }
+                    const playerInRoom = lobbyPlayers.some(p => p.type === 'player');
+                    lobbyJoinBtn.disabled = (count >= LOBBY_MAX || playerInRoom || gascoin < LOBBY_FEE || lobbyJoinDisabled);
+                    lobbyJoinBtn.textContent = '加入房间';
+                } else if (lobbyStatus === 'full') {
+                    lobbyStatusText.textContent = '👥 人员已满，即将开奖..';
+                    lobbyStatusMsg.textContent = '👥 人员已满，即将开奖..';
+                    lobbyJoinBtn.disabled = true;
+                    lobbyJoinBtn.textContent = '等待开奖..';
+                } else if (lobbyStatus === 'drawing') {
+                    lobbyStatusText.textContent = '🎉 开奖中！';
+                    lobbyStatusMsg.textContent = '🎉 开奖中！';
+                    lobbyJoinBtn.disabled = true;
+                    lobbyJoinBtn.textContent = '开奖中..';
+                }
+
+                renderSlots();
+
+                if (cheatToggle.checked) {
+                    cheatWin.value = winRate;
+                    cheatLose.value = loseRate;
+                } else {
+                    cheatWin.value = winRate;
+                    cheatLose.value = loseRate;
+                }
+            }
+
+            function renderSlots() {
+                slotsContainer.innerHTML = '';
+                for (let i = 0; i < LOBBY_MAX; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'slot';
+                    if (i < lobbyPlayers.length) {
+                        div.classList.add('occupied');
+                        if (lobbyPlayers[i] && lobbyPlayers[i].type === 'player') {
+                            div.classList.add('me');
+                            div.innerHTML = '<i class="fas fa-user-check"></i>';
+                        } else {
+                            div.innerHTML = '<i class="fas fa-user-check"></i>';
+                        }
+                    } else {
+                        div.innerHTML = '<i class="fas fa-user"></i>';
+                    }
+                    slotsContainer.appendChild(div);
+                }
+            }
+
+            // ================================================================
+            //  大厅逻辑
+            // ================================================================
+            function addBot() {
+                if (lobbyStatus !== 'idle') return false;
+                if (lobbyPlayers.length >= LOBBY_MAX) return false;
+                lobbyPlayers.push({ type: 'bot', id: 'bot_' + Date.now() + '_' + Math.random() });
+                updateUI();
+                return true;
+            }
+
+            function addPlayer() {
+                if (lobbyStatus !== 'idle') return false;
+                if (lobbyPlayers.length >= LOBBY_MAX) return false;
+                if (lobbyPlayers.some(p => p.type === 'player')) return false;
+                if (gascoin < LOBBY_FEE) {
+                    alert('Insufficient Balance.');
+                    return false;
+                }
+                gascoin -= LOBBY_FEE;
+                lobbyPlayers.push({ type: 'player', id: 'player' });
+                updateUI();
+
+                if (lobbyPlayers.length === LOBBY_MAX) {
+                    startFullCountdown();
+                } else {
+                    startBotRecruitment();
+                }
+                return true;
+            }
+
+            function startBotRecruitment() {
+                if (botRecruitTimer) return;
+                if (lobbyStatus !== 'idle') return;
+                if (lobbyPlayers.length >= LOBBY_MAX) return;
+                if (!lobbyPlayers.some(p => p.type === 'player')) return;
+
+                if (autoJoinEnabled && lobbyPlayers.length < LOBBY_MAX && !lobbyPlayers.some(p => p.type === 'player')) {
+                    if (gascoin >= autoJoinAmount) {
+                        const fee = autoJoinAmount;
+                        if (gascoin >= fee) {
+                            gascoin -= fee;
+                            lobbyPlayers.push({ type: 'player', id: 'player' });
+                            updateUI();
+                            if (lobbyPlayers.length === LOBBY_MAX) {
+                                startFullCountdown();
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                botRecruitTimer = setInterval(() => {
+                    if (lobbyStatus !== 'idle' || lobbyPlayers.length >= LOBBY_MAX) {
+                        clearInterval(botRecruitTimer);
+                        botRecruitTimer = null;
+                        return;
+                    }
+                    if (autoJoinEnabled && !lobbyPlayers.some(p => p.type === 'player') && lobbyPlayers.length < LOBBY_MAX) {
+                        if (gascoin >= autoJoinAmount) {
+                            gascoin -= autoJoinAmount;
+                            lobbyPlayers.push({ type: 'player', id: 'player' });
+                            updateUI();
+                            if (lobbyPlayers.length === LOBBY_MAX) {
+                                clearInterval(botRecruitTimer);
+                                botRecruitTimer = null;
+                                startFullCountdown();
+                                return;
+                            }
+                        }
+                    }
+                    if (Math.random() < 0.8) {
+                        if (lobbyPlayers.length < LOBBY_MAX) {
+                            addBot();
+                            if (lobbyPlayers.length === LOBBY_MAX) {
+                                clearInterval(botRecruitTimer);
+                                botRecruitTimer = null;
+                                startFullCountdown();
+                            }
+                        }
+                    }
+                }, 1500 + Math.random() * 2000);
+            }
+
+            function startFullCountdown() {
+                if (lobbyStatus === 'full' || lobbyStatus === 'drawing') return;
+                if (botRecruitTimer) {
+                    clearInterval(botRecruitTimer);
+                    botRecruitTimer = null;
+                }
+                lobbyStatus = 'full';
+                updateUI();
+
+                const delay = 5000;
+                if (lobbyTimer) clearTimeout(lobbyTimer);
+                lobbyTimer = setTimeout(() => {
+                    drawLottery();
+                }, delay);
+            }
+
+            function drawLottery() {
+                lobbyStatus = 'drawing';
+                updateUI();
+
+                const count = lobbyPlayers.length;
+                if (count === 0) {
+                    resetLobby(true); // 开奖时重置，弹窗
+                    return;
+                }
+
+                let playerResult = null;
+                for (let p of lobbyPlayers) {
+                    let isWin = false;
+                    let amount = 0;
+
+                    if (lobbyCheatEnabled) {
+                        if (cheatResultType === 'win') {
+                            isWin = true;
+                            amount = cheatAmount;
+                        } else if (cheatResultType === 'lose') {
+                            isWin = false;
+                            amount = cheatAmount;
+                        } else {
+                            isWin = Math.random() < 0.5;
+                            if (isWin) {
+                                amount = Math.floor(Math.random() * 181);
+                            } else {
+                                amount = Math.floor(Math.random() * 231) + 10;
+                            }
+                        }
+                    } else {
+                        isWin = Math.random() < 0.5;
+                        if (isWin) {
+                            amount = Math.floor(Math.random() * 181);
+                        } else {
+                            amount = Math.floor(Math.random() * 231) + 10;
+                        }
+                    }
+
+                    if (p.type === 'player') {
+                        if (isWin) {
+                            gascoin += amount;
+                            playerResult = `🎉 恭喜，您获得 ${amount} GC`;
+                        } else {
+                            gascoin -= amount;
+                            playerResult = `😔 抱歉，您失去 ${amount} GC`;
+                        }
+                        alert(playerResult);
+                    }
+                }
+
+                if (playerResult) {
+                    lobbyStatusMsg.textContent = playerResult;
+                    lobbyStatusText.textContent = playerResult;
+                } else {
+                    lobbyStatusMsg.textContent = '开奖结束！';
+                    lobbyStatusText.textContent = '开奖结束！';
+                }
+                updateUI();
+
+                if (lobbyTimer) clearTimeout(lobbyTimer);
+                lobbyTimer = setTimeout(() => {
+                    resetLobby(true);
+                }, 4000);
+            }
+
+            // 重置函数，支持是否显示提示
+            function resetLobby(showAlert = true) {
+                if (lobbyTimer) {
+                    clearTimeout(lobbyTimer);
+                    lobbyTimer = null;
+                }
+                if (botRecruitTimer) {
+                    clearInterval(botRecruitTimer);
+                    botRecruitTimer = null;
+                }
+                lobbyPlayers = [];
+                lobbyStatus = 'idle';
+                lobbyJoinDisabled = false;
+                lobbyJackpot = generateJackpot();
+                updateUI();
+                lobbyStatusText.textContent = '等待玩家加入..';
+                lobbyStatusMsg.textContent = '等待玩家加入..';
+                if (showAlert) {
+                    alert('房间已重置');
+                }
+            }
+
+            // ================================================================
+            //  大厅作弊控制
+            // ================================================================
+            lobbyCheatToggle.addEventListener('change', function() {
+                const hasPlayer = lobbyPlayers.some(p => p.type === 'player');
+                if (this.checked && !hasPlayer) {
+                    alert('您需要先加入房间才能使用作弊模式');
+                    this.checked = false;
+                    return;
+                }
+                lobbyCheatEnabled = this.checked;
+                lobbyCheatControls.classList.toggle('show', lobbyCheatEnabled);
+                lobbyCheatType.disabled = !lobbyCheatEnabled;
+                lobbyCheatAmount.disabled = !lobbyCheatEnabled;
+                lobbyCheatCountInput.disabled = !lobbyCheatEnabled;
+                lobbyCheatApplyBtn.disabled = !lobbyCheatEnabled;
+                lobbyCheatModifyBtn.disabled = !lobbyCheatEnabled;
+                if (!lobbyCheatEnabled) {
+                    cheatResultType = 'random';
+                    cheatAmount = 0;
+                }
+            });
+
+            lobbyCheatModifyBtn.addEventListener('click', function() {
+                if (!lobbyCheatEnabled) return;
+                const type = lobbyCheatType.value;
+                const amount = parseFloat(lobbyCheatAmount.value) || 0;
+                if (type !== 'random' && amount < 0) {
+                    alert('请输入有效的非负数值');
+                    return;
+                }
+                cheatResultType = type;
+                cheatAmount = amount;
+                alert('作弊设置已应用');
+            });
+
+            lobbyCheatApplyBtn.addEventListener('click', function() {
+                if (!lobbyCheatEnabled) return;
+                let countVal = parseInt(lobbyCheatCountInput.value);
+                if (isNaN(countVal) || countVal < 0 || countVal > LOBBY_MAX) {
+                    alert(`请输入 0 ~ ${LOBBY_MAX} 之间的有效人数。`);
+                    return;
+                }
+                const hasPlayer = lobbyPlayers.some(p => p.type === 'player');
+                let newPlayers = [];
+                if (hasPlayer) {
+                    newPlayers.push({ type: 'player', id: 'player' });
+                }
+                let targetCount = countVal;
+                if (hasPlayer) targetCount = Math.max(1, targetCount);
+                while (newPlayers.length < targetCount) {
+                    newPlayers.push({ type: 'bot', id: 'bot_' + Date.now() + '_' + Math.random() });
+                }
+                if (!hasPlayer) {
+                    newPlayers = [];
+                    for (let i = 0; i < countVal; i++) {
+                        newPlayers.push({ type: 'bot', id: 'bot_' + Date.now() + '_' + Math.random() });
+                    }
+                }
+                lobbyPlayers = newPlayers;
+                lobbyJackpot = generateJackpot();
+                updateUI();
+
+                if (lobbyPlayers.length === LOBBY_MAX && lobbyStatus === 'idle') {
+                    startFullCountdown();
+                } else {
+                    if (lobbyPlayers.some(p => p.type === 'player') && lobbyStatus === 'idle') {
+                        startBotRecruitment();
+                    }
+                }
+            });
+
+            // ================================================================
+            //  加入房间
+            // ================================================================
+            lobbyJoinBtn.addEventListener('click', function() {
+                if (lobbyJoinDisabled) return;
+                lobbyJoinDisabled = true;
+                const success = addPlayer();
+                lobbyJoinDisabled = false;
+                if (!success) updateUI();
+            });
+
+            // ================================================================
+            //  管理面板 - 重置房间 (手动点击)
+            // ================================================================
+            adminResetBtn.addEventListener('click', function() {
+                if (!confirm('确定要重置房间吗？所有玩家将被移除，当前倒计时将终止。')) return;
+                resetLobby(true); // 手动重置，显示提示
+            });
+
+            // ================================================================
+            //  单人模式
+            // ================================================================
+            function playSpin() {
+                if (gascoin < 10) {
+                    alert('Insufficient Balance.');
+                    return;
+                }
+                btnSpin.disabled = true;
+                gascoin -= 10;
+
+                const randomValue = Math.random() * 100;
+                const isWin = randomValue < winRate;
+
+                let earned = 0;
+                let displayText = '';
+
+                if (isWin) {
+                    earned = Math.floor(Math.random() * 169) + 12;
+                    gascoin += earned;
+                    displayText = `+${earned}`;
+                    spinResultEl.className = 'result-disp win-txt';
+                    winRate -= 2;
+                    loseRate += 2;
+                    spinMsgEl.textContent = `🎉 赢了 ${earned} GC！下次难度增加`;
+                } else {
+                    earned = Math.floor(Math.random() * 231) + 10;
+                    gascoin -= earned;
+                    displayText = `-${earned}`;
+                    spinResultEl.className = 'result-disp lose-txt';
+                    if (winRate < 49) {
+                        winRate = 49;
+                        loseRate = 51;
+                    } else {
+                        winRate += 2;
+                        loseRate -= 2;
+                    }
+                    spinMsgEl.textContent = `😔 输了 ${earned} GC，几率重置`;
+                }
+
+                spinResultEl.textContent = displayText;
+                updateUI();
+
+                setTimeout(() => {
+                    btnSpin.disabled = (gascoin < 10);
+                    spinResultEl.textContent = '?';
+                    spinResultEl.className = 'result-disp';
+                    spinMsgEl.textContent = '';
+                }, 1800);
+            }
+
+            btnSpin.addEventListener('click', playSpin);
+
+            // ================================================================
+            //  余额修改
+            // ================================================================
+            setBalanceBtn.addEventListener('click', function() {
+                let val = parseFloat(balanceInput.value);
+                if (isNaN(val) || val < 0) {
+                    alert('请输入有效的非负数字！');
+                    balanceInput.value = gascoin.toFixed(2);
+                    return;
+                }
+                gascoin = Math.round(val * 100) / 100;
+                updateUI();
+            });
+
+            // ================================================================
+            //  单人作弊模式
+            // ================================================================
+            cheatToggle.addEventListener('change', function() {
+                const enabled = this.checked;
+                cheatControls.classList.toggle('show', enabled);
+                cheatWin.disabled = !enabled;
+                cheatLose.disabled = !enabled;
+                applyCheatBtn.disabled = !enabled;
+                if (enabled) {
+                    cheatWin.value = winRate;
+                    cheatLose.value = loseRate;
+                } else {
+                    cheatWin.value = winRate;
+                    cheatLose.value = loseRate;
+                }
+            });
+
+            cheatWin.addEventListener('input', function() {
+                if (!cheatToggle.checked) return;
+                let v = parseInt(this.value) || 0;
+                if (v < 0) v = 0;
+                if (v > 100) v = 100;
+                this.value = v;
+                let remain = 100 - v;
+                if (remain < 0) remain = 0;
+                cheatLose.value = remain;
+            });
+
+            cheatLose.addEventListener('input', function() {
+                if (!cheatToggle.checked) return;
+                let v = parseInt(this.value) || 0;
+                if (v < 0) v = 0;
+                if (v > 100) v = 100;
+                this.value = v;
+                let remain = 100 - v;
+                if (remain < 0) remain = 0;
+                cheatWin.value = remain;
+            });
+
+            applyCheatBtn.addEventListener('click', function() {
+                if (!cheatToggle.checked) return;
+                const w = parseInt(cheatWin.value) || 0;
+                const l = parseInt(cheatLose.value) || 0;
+                if (w + l !== 100) {
+                    alert('赢率 + 输率 必须等于 100%！');
+                    return;
+                }
+                if (w < 0 || w > 100 || l < 0 || l > 100) {
+                    alert('概率必须在 0 ~ 100 之间！');
+                    return;
+                }
+                winRate = w;
+                loseRate = l;
+                updateUI();
+            });
+
+            // ================================================================
+            //  自动加入设置
+            // ================================================================
+            function loadAutoSettings() {
+                try {
+                    const saved = localStorage.getItem('lobby_auto_join');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        autoJoinEnabled = data.enabled || false;
+                        autoJoinAmount = data.amount || 20;
+                        autoSwitch.checked = autoJoinEnabled;
+                        autoAmountBtns.forEach(btn => {
+                            const amt = parseInt(btn.dataset.amt);
+                            btn.classList.toggle('active', amt === autoJoinAmount);
+                        });
+                    }
+                } catch (e) { /* ignore */ }
+            }
+
+            function saveAutoSettings() {
+                const enabled = autoSwitch.checked;
+                let amount = autoJoinAmount;
+                autoAmountBtns.forEach(btn => {
+                    if (btn.classList.contains('active')) {
+                        amount = parseInt(btn.dataset.amt);
+                    }
+                });
+                autoJoinEnabled = enabled;
+                autoJoinAmount = amount;
+                try {
+                    localStorage.setItem('lobby_auto_join', JSON.stringify({ enabled, amount }));
+                } catch (e) { /* ignore */ }
+                closeAutoModal();
+                if (autoJoinEnabled && lobbyStatus === 'idle' && lobbyPlayers.length === 0) {
+                    if (gascoin >= autoJoinAmount) {
+                        const fee = autoJoinAmount;
+                        if (gascoin >= fee) {
+                            gascoin -= fee;
+                            lobbyPlayers.push({ type: 'player', id: 'player' });
+                            updateUI();
+                            if (lobbyPlayers.length === LOBBY_MAX) {
+                                startFullCountdown();
+                            } else {
+                                startBotRecruitment();
+                            }
+                        }
+                    }
+                }
+            }
+
+            function openAutoModal() {
+                autoModal.style.display = 'flex';
+                autoSwitch.checked = autoJoinEnabled;
+                autoAmountBtns.forEach(btn => {
+                    const amt = parseInt(btn.dataset.amt);
+                    btn.classList.toggle('active', amt === autoJoinAmount);
+                });
+            }
+
+            function closeAutoModal() {
+                autoModal.style.display = 'none';
+            }
+
+            autoAmountBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    autoAmountBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    autoJoinAmount = parseInt(this.dataset.amt);
+                });
+            });
+
+            btnSaveAuto.addEventListener('click', saveAutoSettings);
+            btnCancelAuto.addEventListener('click', closeAutoModal);
+            settingsIcon.addEventListener('click', openAutoModal);
+
+            window.addEventListener('click', function(event) {
+                if (event.target === autoModal) {
+                    closeAutoModal();
+                }
+            });
+
+            // ================================================================
+            //  移动端侧边栏切换
+            // ================================================================
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // ================================================================
+            //  近期动态 - 真实 API 集成
+            // ================================================================
+            const feedContainer = document.getElementById('feed-container');
+            const feedCount = document.getElementById('feed-count');
+            const refreshBtn = document.getElementById('refreshFeedBtn');
+            const refreshIcon = document.getElementById('refreshIcon');
+            const refreshText = document.getElementById('refreshText');
+            const pollIntervalDisplay = document.getElementById('poll-interval-display');
+
+            const LIMIT = 30;
+            const POLL_INTERVAL = 5000;
+            let currentFingerprint = null;
+            let pollTimer = null;
+            let isRefreshing = false;
+            let feedLoaded = false;
+
+            async function fetchFeed() {
+                const target = `https://moonbazaar.xyz/home/get_live_feed.php?limit=${LIMIT}&offset=0`;
+                const proxies = [
+                    `https://cors.eu.org/${target}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`
+                ];
+
+                const tryFetch = async (url) => {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res;
+                };
+
+                const results = await Promise.allSettled(proxies.map(tryFetch));
+                const ok = results.find(r => r.status === 'fulfilled');
+                if (ok) {
+                    return await ok.value.json();
+                } else {
+                    throw new Error('所有代理均失败');
+                }
+            }
+
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function getFingerprint(tx) {
+                const val = parseFloat(tx.robux_val).toFixed(4);
+                return `${tx.username}|${tx.source}|${val}|${tx.time_ago}`;
+            }
+
+            function createFeedItem(tx, isNew = false) {
+                const val = parseFloat(tx.robux_val);
+                const isGain = val > 0;
+                const absVal = Math.abs(val).toFixed(4);
+                const item = document.createElement('div');
+                item.className = 'feed-item' + (isNew ? ' new' : '');
+                item.style.borderColor = isGain ? '#28a745' : '#d9534f';
+
+                const left = document.createElement('span');
+                left.className = 'left';
+                left.innerHTML = `
+                    <span class="username">${escapeHTML(tx.username)}</span>
+                    <span class="source">在 ${escapeHTML(tx.source)}</span>
+                `;
+
+                const right = document.createElement('span');
+                right.style.display = 'flex';
+                right.style.alignItems = 'center';
+                right.style.gap = '8px';
+                right.innerHTML = `
+                    <span class="amount ${isGain ? 'gain' : 'loss'}">${isGain ? '+' : '-'}${absVal} Gascoin</span>
+                    <span class="time">${escapeHTML(tx.time_ago)}</span>
+                `;
+
+                item.appendChild(left);
+                item.appendChild(right);
+                return item;
+            }
+
+            async function loadFeed(isManual = false) {
+                if (isRefreshing) return;
+                isRefreshing = true;
+
+                refreshBtn.disabled = true;
+                refreshIcon.textContent = '';
+                refreshIcon.className = 'spinner';
+                refreshText.textContent = isManual ? '刷新中…' : '更新中…';
+
+                try {
+                    const data = await fetchFeed();
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        if (!feedLoaded || isManual) {
+                            feedContainer.innerHTML = `<div class="feed-status-msg"><span class="icon">📭</span>暂无动态</div>`;
+                            feedCount.textContent = '0';
+                        }
+                        feedLoaded = true;
+                        return;
+                    }
+
+                    if (!feedLoaded || isManual) {
+                        feedContainer.innerHTML = '';
+                        data.forEach(tx => {
+                            feedContainer.appendChild(createFeedItem(tx, false));
+                        });
+                        currentFingerprint = getFingerprint(data[0]);
+                        feedCount.textContent = data.length;
+                        feedLoaded = true;
+                        return;
+                    }
+
+                    const latestFp = getFingerprint(data[0]);
+                    if (latestFp === currentFingerprint) {
+                        feedCount.textContent = feedContainer.children.length;
+                        return;
+                    }
+
+                    let newItems = [];
+                    for (const tx of data) {
+                        if (getFingerprint(tx) === currentFingerprint) break;
+                        newItems.push(tx);
+                    }
+
+                    if (newItems.length > 0) {
+                        currentFingerprint = getFingerprint(data[0]);
+                        for (let i = newItems.length - 1; i >= 0; i--) {
+                            const el = createFeedItem(newItems[i], true);
+                            feedContainer.prepend(el);
+                        }
+                        while (feedContainer.children.length > 150) {
+                            feedContainer.removeChild(feedContainer.lastChild);
+                        }
+                        feedCount.textContent = feedContainer.children.length;
+                    }
+
+                } catch (err) {
+                    console.error('加载动态失败:', err);
+                    if (!feedLoaded || isManual) {
+                        feedContainer.innerHTML = `
+                            <div class="feed-status-msg">
+                                <span class="icon">⚠️</span>
+                                加载失败，请点击「刷新」重试
+                            </div>
+                        `;
+                        feedCount.textContent = '0';
+                    }
+                } finally {
+                    isRefreshing = false;
+                    refreshBtn.disabled = false;
+                    refreshIcon.className = '';
+                    refreshIcon.textContent = '⟳';
+                    refreshText.textContent = '刷新';
+                }
+            }
+
+            function handleManualRefresh() {
+                if (pollTimer) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+                currentFingerprint = null;
+                feedLoaded = false;
+                feedContainer.innerHTML = `<div class="feed-status-msg"><span class="icon">⏳</span>刷新中…</div>`;
+                loadFeed(true).then(() => {
+                    if (pollTimer) clearInterval(pollTimer);
+                    pollTimer = setInterval(() => loadFeed(false), POLL_INTERVAL);
+                });
+            }
+
+            refreshBtn.addEventListener('click', handleManualRefresh);
+
+            loadFeed(false).then(() => {
+                pollTimer = setInterval(() => loadFeed(false), POLL_INTERVAL);
+                pollIntervalDisplay.textContent = POLL_INTERVAL / 1000;
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (pollTimer) {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                    }
+                } else {
+                    if (!pollTimer) {
+                        pollTimer = setInterval(() => loadFeed(false), POLL_INTERVAL);
+                        loadFeed(false);
+                    }
+                }
+            });
+
+            // ================================================================
+            //  初始化游戏
+            // ================================================================
+            loadAutoSettings();
+            lobbyJackpot = generateJackpot();
+            updateUI();
+            spinResultEl.textContent = '?';
+            spinResultEl.className = 'result-disp';
+            cheatControls.classList.remove('show');
+            cheatWin.disabled = true;
+            cheatLose.disabled = true;
+            applyCheatBtn.disabled = true;
+            lobbyCheatControls.classList.remove('show');
+            lobbyCheatType.disabled = true;
+            lobbyCheatAmount.disabled = true;
+            lobbyCheatCountInput.disabled = true;
+            lobbyCheatApplyBtn.disabled = true;
+            lobbyCheatModifyBtn.disabled = true;
+            // 静默重置，不弹窗
+            resetLobby(false);
+
+            if (autoJoinEnabled && lobbyStatus === 'idle' && lobbyPlayers.length === 0) {
+                if (gascoin >= autoJoinAmount) {
+                    const fee = autoJoinAmount;
+                    gascoin -= fee;
+                    lobbyPlayers.push({ type: 'player', id: 'player' });
+                    updateUI();
+                    if (lobbyPlayers.length === LOBBY_MAX) {
+                        startFullCountdown();
+                    } else {
+                        startBotRecruitment();
+                    }
+                }
+            }
+
+            console.log('🎰 幸运大厅已启动 (静默重置，启动不弹窗)');
+        });
+    </script>
+</body>
+</html>
