@@ -172,9 +172,21 @@
             const container = document.getElementById('live-feed-container');
             try {
                 // 获取最新 20 条，不再带有 token
-                const url = 'https://moonbazaar.xyz/home/get_live_feed.php?limit=20&offset=0';
-                const response = await fetch(url);
-                if (response.ok) {
+                const direct = 'https://moonbazaar.xyz/home/get_live_feed.php?limit=20&offset=0';
+                // moonbazaar 未开放 CORS，走代理转发（按顺序回退）
+                const proxies = [
+                    'https://api.allorigins.win/raw?url=' + encodeURIComponent(direct),
+                    'https://corsproxy.io/?url=' + encodeURIComponent(direct),
+                    'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(direct)
+                ];
+                let response = null;
+                for (const url of proxies) {
+                    try {
+                        response = await fetch(url);
+                        if (response.ok) break;
+                    } catch (e) { /* try next proxy */ }
+                }
+                if (response && response.ok) {
                     const data = await response.json();
                     // 清空并加载最新的20条，避免和推流出现重复元素显示
                     container.innerHTML = '';
