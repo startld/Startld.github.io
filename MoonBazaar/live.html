@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <script>
+        function BroIsTooLazy() {
+            console.log("There was a link here.")
+        }
+
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciaml Release Page</title>
+    <style>
+        /* 重置所有边距 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            /* 确保 body 占满视口 */
+        }
+
+        body {
+            /* 深灰色背景，会从左右两侧露出来 */
+            background-color: #a8b2c0;
+            /* 使用 flex 让白色区块垂直撑满并水平居中 */
+            display: flex;
+            justify-content: center;
+            /* 水平居中 */
+            align-items: stretch;
+            /* 垂直拉伸，让子项高度撑满 */
+            padding: 0;
+        }
+
+        /* 纯白 div：垂直撑满，水平居中，无圆角 */
+        .white-full {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 800px;
+            /* 限制宽度，左右留出灰色背景 */
+            /* 垂直方向自动拉伸至父容器高度 (因为 align-items: stretch) */
+            /* 无圆角 */
+            border-radius: 0;
+            /* 无阴影、无边距、无内边距 */
+            box-shadow: none;
+            margin: 2;
+            padding: 0;
+            /* 可选：添加极简边框来观察边界，但不需要，保持纯净 */
+        }
+
+        /* 小屏幕适配：让白色区块占满宽度，但仍保留灰色？ 
+           如果屏幕宽度小于 max-width，则白色占满，灰色消失，
+           但这是合理的，因为灰色只在宽屏可见。 */
+    </style>
+</head>
+
+<body>
+
+    <!-- 白色区块，通顶通底，居中，无圆角，灰色背景在两侧可见 -->
+    <div class="white-full">
+        <h2 align="center">Mort's <strong>WEB </strong>World </h2>
+        <hr>
+        <P align="center">
+            <a href="Mods/Xaero-Fairplay-Bypass.html"><button>Mod页面</button></a>
+            <a href="404notfound.html"><button>文档页面</button></a>
+            <a href="404notfound.html"><button>游戏</button></a>
+            <a href="404notfound.html"><button>Blog啥的</button></a>
+            <a href="404notfound.html"><button>工具页面</button></a>
+            <a href="findme.html"><button>联系Mort(awa)</button></a>
+        </P>
+
+        <hr>
+        <div style="margin: 20px;">
+            <h2>引导页</h2>
+            <p>欢迎来到Mort's Web world!<br>我是Mort MortIsntCoder!<br>您现在处于 index.html 这只是网站的很小一部分 你可以通过一下链接来跳转到你想要的页面！</p>
+            <div style="border-radius: 10px;border-style: solid;padding-left: 51px;">
+                <div style="display: flex;flex-direction: row;">
+                    <h3>LABLE</h3>
+                    <div
+                        style="border-radius: 8px;background-color: rgb(80, 117, 82);display: flex;justify-content: center;align-items: center;height: 20px;margin-right: 10px;">
+                        <h6>SUBTITLE <h6>
+                    </div>
+                </div>
+                <hr>
+                </hr>
+                <p>
+                    <a href="#l1xx"><button
+                            style="border-radius: 8px;background-color: rgb(255, 255, 255);padding: 5px;">ZBUTTOn</button></a>
+                </p>
+
+                <hr>
+                </hr>
+            </div>
+
+            <!-- 最近动态卡片（唯一新增功能） -->
+            <div style="border-radius: 10px;border-style: solid;padding-left: 51px;margin-top: 20px;">
+                <div style="display: flex;flex-direction: row;">
+                    <h3>最近动态</h3>
+                    <div
+                        style="border-radius: 8px;background-color: rgb(80, 117, 82);display: flex;justify-content: center;align-items: center;height: 20px;margin-right: 10px;">
+                        <h6>LIVE <h6>
+                    </div>
+                </div>
+                <hr>
+                </hr>
+                <div id="live-feed-container" style="max-height: 50vh;overflow-y: auto;margin: 10px 0;">
+                    <p style="color: #777;">加载中...</p>
+                </div>
+                <p>
+                    <button onclick="loadLiveFeed()"
+                        style="border-radius: 8px;background-color: rgb(255, 255, 255);padding: 5px;">刷新</button>
+                </p>
+                <hr>
+                </hr>
+            </div>
+
+        </div>
+
+        <footer>
+            <div align="center">
+                <small>Mod 由 MortIsntCoder + 深度求索 DeepSeek 制作。</small>
+            </div>
+        </footer>
+    </div>
+    </div>
+    </div>
+
+    <script>
+        function escapeHTML(str) {
+            const p = document.createElement('p');
+            p.appendChild(document.createTextNode(str));
+            return p.innerHTML;
+        }
+
+        function createFeedElement(tx) {
+            const item = document.createElement('div');
+            item.style.border = '1px solid #ccc';
+            item.style.borderRadius = '8px';
+            item.style.padding = '8px 10px';
+            item.style.margin = '6px 0';
+            item.style.fontSize = '0.9em';
+            const robuxValue = parseFloat(tx.robux_val);
+            const formattedRobux = parseFloat(robuxValue.toFixed(4));
+            let description = '';
+            if (robuxValue > 0) {
+                item.style.borderColor = '#28a745';
+                description = `<b>${escapeHTML(tx.username)}</b> 在 ${escapeHTML(tx.source)} 获得了 <b style="color:#155724;">${formattedRobux} Gascoin</b>`;
+            } else {
+                item.style.borderColor = '#d9534f';
+                const absRobux = Math.abs(formattedRobux);
+                description = `<b>${escapeHTML(tx.username)}</b> 在 ${escapeHTML(tx.source)} 被扣除 <b style="color:#721c24;">${absRobux} Gascoin</b>`;
+            }
+            const time = document.createElement('span');
+            time.style.float = 'right';
+            time.style.color = '#777';
+            time.style.fontSize = '0.85em';
+            time.textContent = tx.time_ago;
+            const p = document.createElement('p');
+            p.style.margin = '0';
+            p.innerHTML = description;
+            item.appendChild(p);
+            item.appendChild(time);
+            return item;
+        }
+
+        async function loadLiveFeed() {
+            const container = document.getElementById('live-feed-container');
+            try {
+                // 获取最新 20 条，不再带有 token
+                const url = 'https://moonbazaar.xyz/home/get_live_feed.php?limit=20&offset=0';
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    // 清空并加载最新的20条，避免和推流出现重复元素显示
+                    container.innerHTML = '';
+                    data.forEach(item => {
+                        container.appendChild(createFeedElement(item));
+                    });
+                } else {
+                    container.innerHTML = '<p style="color:#777;">无法加载动态信息</p>';
+                    console.error('Failed to load initial live feed data');
+                }
+            } catch (err) {
+                container.innerHTML = '<p style="color:#777;">无法加载动态信息</p>';
+                console.error('Failed to fetch live feed:', err);
+            }
+        }
+
+        loadLiveFeed();
+    </script>
+</body>
+
+</html>
