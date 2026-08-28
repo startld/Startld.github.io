@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Redirect</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f8ff;
+            color: #154963;
+        }
+        .msg {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="msg">Redirecting...</div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const survey = params.get('survey');
+        if (survey) {
+            try {
+                let base64 = survey.replace(/-/g, '+').replace(/_/g, '/');
+                while (base64.length % 4) base64 += '=';
+                const url = atob(base64);
+                window.location.href = url;
+            } catch (e) {
+                document.querySelector('.msg').textContent = 'Invalid link';
+            }
+        } else {
+            document.querySelector('.msg').textContent = 'Missing survey parameter';
+        }
+    </script>
+</body>
+</html>
